@@ -10,12 +10,3 @@ from . import Substructure
 from . import Utils
 from . import MainDeflector
 from . import generate, robustness_test
-
-# Analysis is not imported by default because it required tensorflow.
-try:
-    import tensorflow as tf
-    del tf
-except ImportError:
-    print("paltas.Analysis disabled since tensorflow is missing")
-else:
-    from . import Analysis
