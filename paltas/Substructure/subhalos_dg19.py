@@ -377,7 +377,7 @@ class SubhalosDG19(SubhalosBase):
             being combined with los substructure.
         """
         # Stupid wrapper for compatibility with the test suite
-        from paltas.Configs.config_handler import LenstronomyInputs
+        from paltas.core import LenstronomyInputs
 
         result = LenstronomyInputs()
         self.draw(result)

@@ -1,7 +1,7 @@
 from pathlib import Path
 import unittest
 from paltas.Utils import cosmology_utils, hubble_utils
-from paltas.Configs import config_handler
+from paltas.core import Paltas, MagnificationError
 import paltas
 import numpy as np
 from lenstronomy.LensModel.lens_model import LensModel
@@ -23,8 +23,8 @@ class ConfigUtilsTests(unittest.TestCase):
     def setUp(self):
         # Fix the random seed to be able to have reliable tests
         np.random.seed(10)
-        self.c = config_handler.ConfigHandler(test_data_folder / 'config_dict.py')
-        self.c_all = config_handler.ConfigHandler(test_data_folder / 'config_dict_all.py')
+        self.c = Paltas(test_data_folder / 'config_dict.py')
+        self.c_all = Paltas(test_data_folder / 'config_dict_all.py')
 
     def test_init(self):
         # Test that the class was initialized correctly
@@ -266,7 +266,7 @@ class ConfigUtilsTests(unittest.TestCase):
         # Check that the mag_cut works
         self.c.add_noise =False
         self.c.mag_cut = 1.2
-        with self.assertRaises(config_handler.MagnificationError):
+        with self.assertRaises(MagnificationError):
             image, metadata = self.c._draw_image_standard(self.c.add_noise)
 
         # Now add a deflector and see if we get a ring
@@ -365,7 +365,7 @@ class ConfigUtilsTests(unittest.TestCase):
 
     def test__draw_image_drizzle(self):
         # Test that drawing drizzled images works as expected.
-        c_drizz = config_handler.ConfigHandler(test_data_folder / 'config_dict_drizz.py')
+        c_drizz = Paltas(test_data_folder / 'config_dict_drizz.py')
 
         # Start with the simplest configuration, a source with nothing lensing
         # the source
@@ -429,7 +429,7 @@ class ConfigUtilsTests(unittest.TestCase):
         # Check that the mag_cut works
         c_drizz.add_noise=False
         c_drizz.mag_cut = 1.2
-        with self.assertRaises(config_handler.MagnificationError):
+        with self.assertRaises(MagnificationError):
             image, metadata = c_drizz._draw_image_drizzle()
 
         # Now add a deflector and see if we get a ring
@@ -463,7 +463,7 @@ class ConfigUtilsTests(unittest.TestCase):
         # Setup a fairly basic situation with a source at redshift 1.0 an a
         # massive main deflector at redshift 0.5.
         # Test that drawing drizzled images works as expected.
-        c_drizz = config_handler.ConfigHandler(test_data_folder / 'config_dict_drizz.py')
+        c_drizz = Paltas(test_data_folder / 'config_dict_drizz.py')
 
         # Start with the simplest configuration, a source with nothing lensing
         # the source
@@ -573,7 +573,7 @@ class ConfigUtilsTests(unittest.TestCase):
 
     def test_draw_image(self):
         # Just test that nothing crashes.
-        c_drizz = config_handler.ConfigHandler(test_data_folder / 'config_dict_drizz.py')
+        c_drizz = Paltas(test_data_folder / 'config_dict_drizz.py')
         _,_ = c_drizz.draw_image(new_sample=True)
         image,_ = self.c.draw_image(new_sample=True)
 
@@ -598,7 +598,7 @@ class ConfigUtilsTests(unittest.TestCase):
     def test_draw_image_reproducible(self):
         # Test we can reproduce generated images by setting appropriate
         # random seeds
-        c = config_handler.ConfigHandler(test_data_folder / 'config_dict_drizz.py')
+        c = Paltas(test_data_folder / 'config_dict_drizz.py')
         img_1, meta_1 = c.draw_image()
         img_2, meta_2 = c.draw_image()
         seed_1, seed_2 = meta_1['seed'], meta_2['seed']
@@ -606,13 +606,13 @@ class ConfigUtilsTests(unittest.TestCase):
 
         # Just set the base_seed attribute manually; simpler than building
         # a temporary config file
-        c_1 = config_handler.ConfigHandler(test_data_folder / 'config_dict_drizz.py')
+        c_1 = Paltas(test_data_folder / 'config_dict_drizz.py')
         c_1.base_seed = seed_1
         img_1a, _ = c_1.draw_image()
         np.testing.assert_allclose(img_1, img_1a)
 
         # Test this works even for an image in the middle of a training set
-        c_2 = config_handler.ConfigHandler(test_data_folder / 'config_dict_drizz.py')
+        c_2 = Paltas(test_data_folder / 'config_dict_drizz.py')
         c_2.base_seed = seed_2
         img_2a, _ = c_2.draw_image()
         np.testing.assert_allclose(img_2, img_2a)

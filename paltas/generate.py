@@ -20,7 +20,7 @@ import shutil
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import pandas as pd
-from paltas.Configs.config_handler import ConfigHandler
+from paltas.core import Paltas
 from paltas.Utils.cli_maker import make_cli
 
 
@@ -53,7 +53,7 @@ def generate_from_config(
     metadata_path = os.path.join(save_folder, "metadata.csv")
 
     # Initialize our config handler
-    config_handler = ConfigHandler(config_path)
+    config_handler = Paltas(config_path)
 
     # Generate our images
     pbar = tqdm(total=n)
