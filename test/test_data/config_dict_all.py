@@ -1,5 +1,5 @@
 # A test configuration dict
-
+from pathlib import Path
 from paltas.Sampling import distributions
 import numpy as np
 from scipy.stats import uniform, norm, loguniform, lognorm, multivariate_normal
@@ -30,7 +30,7 @@ no_noise = True
 output_ab_zeropoint = 25.127
 
 # Define the cosmos path
-cosmos_folder = './test_data/cosmos/'
+cosmos_folder = str(Path(__file__).parent.parent / 'test_data' / 'cosmos')
 
 config_dict = {
 	'subhalo':{

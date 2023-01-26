@@ -1,3 +1,4 @@
+from pathlib import Path
 import unittest
 from paltas.Utils import cosmology_utils, hubble_utils
 from paltas.Configs import config_handler
@@ -10,9 +11,11 @@ from paltas.Sources.cosmos import COSMOSIncludeCatalog
 from paltas.MainDeflector.simple_deflectors import PEMDShear
 from paltas.Sources.sersic import SingleSersicSource
 from paltas.PointSource.single_point_source import SinglePointSource
+from paltas.Sources.source_base import make_lens_light_class
 
 # Define the cosmos path
-cosmos_folder = 'test_data/cosmos/'
+test_data_folder = Path(__file__).parent / 'test_data'
+cosmos_folder = test_data_folder / 'cosmos'
 
 
 class ConfigUtilsTests(unittest.TestCase):
@@ -20,8 +23,8 @@ class ConfigUtilsTests(unittest.TestCase):
 	def setUp(self):
 		# Fix the random seed to be able to have reliable tests
 		np.random.seed(10)
-		self.c = config_handler.ConfigHandler('test_data/config_dict.py')
-		self.c_all = config_handler.ConfigHandler('test_data/config_dict_all.py')
+		self.c = config_handler.ConfigHandler(test_data_folder / 'config_dict.py')
+		self.c_all = config_handler.ConfigHandler(test_data_folder / 'config_dict_all.py')
 
 	def test_init(self):
 		# Test that the class was initialized correctly
@@ -91,8 +94,9 @@ class ConfigUtilsTests(unittest.TestCase):
 		# changes.
 		kwargs_model_new, kwargs_params_new = (
 			self.c.get_lenstronomy_models_kwargs(new_sample=True))
-		self.assertFalse(kwargs_params['kwargs_lens'][-2]['theta_E'] ==
-			kwargs_params_new['kwargs_lens'][-2]['theta_E'])
+		# TODO: hardcoded index 0 for main deflector, bad
+		self.assertFalse(kwargs_params['kwargs_lens'][0]['theta_E'] ==
+			kwargs_params_new['kwargs_lens'][0]['theta_E'])
 
 		# Finally check that the config with a point source fills in those
 		# lists.
@@ -121,10 +125,13 @@ class ConfigUtilsTests(unittest.TestCase):
 		self.assertTrue('source_parameters_catalog_i' in metadata)
 
 		# Check the value of a few parameters
+		# TODO: hardcoded indices for lenses:
+		# 0 = main deflector
+		# 1 = external shear
 		self.assertEqual(metadata['main_deflector_parameters_theta_E'],
-			kwargs_params['kwargs_lens'][-2]['theta_E'])
+			kwargs_params['kwargs_lens'][0]['theta_E'])
 		self.assertEqual(metadata['main_deflector_parameters_gamma1'],
-			kwargs_params['kwargs_lens'][-1]['gamma1'])
+			kwargs_params['kwargs_lens'][1]['gamma1'])
 		self.assertEqual(metadata['cosmology_parameters_cosmology_name'],
 			'planck18')
 		self.assertEqual(metadata['subhalo_parameters_c_0'],18)
@@ -329,12 +336,15 @@ class ConfigUtilsTests(unittest.TestCase):
 		np.testing.assert_almost_equal(image,sub_image)
 
 		# Generate image with deflector & lens light
+		# TODO: monkeypatching configs and confighandlers like this is tricky,
+		# exposes dirty laundry like make_lens_light_class...
 		self.c.sample['lens_light_parameters'] = {'z_source':0.5,'magnitude':19,
 			'output_ab_zeropoint':25.95,'R_sersic':1.,'n_sersic':1.2,'e1':0.,
 			'e2':0.,'center_x':0.0,'center_y':0.0}
-		self.c.lens_light_class = SingleSersicSource(
+		self.c.config_dict['lens_light'] = dict(parameters=self.c.sample['lens_light_parameters'])
+		self.c.lens_light_class = make_lens_light_class(SingleSersicSource)(
 			cosmology_parameters='planck18',
-			source_parameters=self.c.sample['lens_light_parameters'])
+			lens_light_parameters=self.c.sample['lens_light_parameters'])
 		lens_light_image, metadata = self.c._draw_image_standard(self.c.add_noise)
 
 		# Assert sum of center with lens light > sum of center orig_image
@@ -355,7 +365,7 @@ class ConfigUtilsTests(unittest.TestCase):
 
 	def test__draw_image_drizzle(self):
 		# Test that drawing drizzled images works as expected.
-		c_drizz = config_handler.ConfigHandler('test_data/config_dict_drizz.py')
+		c_drizz = config_handler.ConfigHandler(test_data_folder / 'config_dict_drizz.py')
 
 		# Start with the simplest configuration, a source with nothing lensing
 		# the source
@@ -453,7 +463,7 @@ class ConfigUtilsTests(unittest.TestCase):
 		# Setup a fairly basic situation with a source at redshift 1.0 an a
 		# massive main deflector at redshift 0.5.
 		# Test that drawing drizzled images works as expected.
-		c_drizz = config_handler.ConfigHandler('test_data/config_dict_drizz.py')
+		c_drizz = config_handler.ConfigHandler(test_data_folder / 'config_dict_drizz.py')
 
 		# Start with the simplest configuration, a source with nothing lensing
 		# the source
@@ -563,7 +573,7 @@ class ConfigUtilsTests(unittest.TestCase):
 
 	def test_draw_image(self):
 		# Just test that nothing crashes.
-		c_drizz = config_handler.ConfigHandler('test_data/config_dict_drizz.py')
+		c_drizz = config_handler.ConfigHandler(test_data_folder / 'config_dict_drizz.py')
 		_,_ = c_drizz.draw_image(new_sample=True)
 		image,_ = self.c.draw_image(new_sample=True)
 
@@ -572,7 +582,7 @@ class ConfigUtilsTests(unittest.TestCase):
 			len(image)//2-2:len(image)//2+2]),0.0)
 
 		# Make sure that if the sample has crazy parameters, those carry
-		# thourgh.
+		# through.
 		self.c.sample['main_deflector_parameters']['theta_E'] = 0.1
 		self.c.mag_cut = None
 		image_small,metadata = self.c.draw_image(new_sample=False)
@@ -588,7 +598,7 @@ class ConfigUtilsTests(unittest.TestCase):
 	def test_draw_image_reproducible(self):
 		# Test we can reproduce generated images by setting appropriate
 		# random seeds
-		c = config_handler.ConfigHandler('test_data/config_dict_drizz.py')
+		c = config_handler.ConfigHandler(test_data_folder / 'config_dict_drizz.py')
 		img_1, meta_1 = c.draw_image()
 		img_2, meta_2 = c.draw_image()
 		seed_1, seed_2 = meta_1['seed'], meta_2['seed']
@@ -596,13 +606,13 @@ class ConfigUtilsTests(unittest.TestCase):
 
 		# Just set the base_seed attribute manually; simpler than building
 		# a temporary config file
-		c_1 = config_handler.ConfigHandler('test_data/config_dict_drizz.py')
+		c_1 = config_handler.ConfigHandler(test_data_folder / 'config_dict_drizz.py')
 		c_1.base_seed = seed_1
 		img_1a, _ = c_1.draw_image()
 		np.testing.assert_allclose(img_1, img_1a)
 
 		# Test this works even for an image in the middle of a training set
-		c_2 = config_handler.ConfigHandler('test_data/config_dict_drizz.py')
+		c_2 = config_handler.ConfigHandler(test_data_folder / 'config_dict_drizz.py')
 		c_2.base_seed = seed_2
 		img_2a, _ = c_2.draw_image()
 		np.testing.assert_allclose(img_2, img_2a)

@@ -346,7 +346,10 @@ class SubhalosDG19(SubhalosBase):
 		from paltas.Configs.config_handler import LenstronomyInputs
 		result = LenstronomyInputs()
 		self.draw(result)
-		return result['lens_model_list'], result['kwargs_lens'], result['lens_redshift_list']
+		return (
+			result.kwargs_model['lens_model_list'], 
+			result.kwargs_params['kwargs_lens'], 
+			result.kwargs_model['lens_redshift_list'])
 
 	def draw(self, result, **kwargs):
 		# Distribute subhalos according to https://arxiv.org/pdf/1909.02573.pdf

@@ -1,17 +1,15 @@
+from pathlib import Path
+import shutil
+
 import numpy as np
 import pandas as pd
 import unittest
 import glob, os
 from paltas import generate
 
-try:
-	import tensorflow as tf
-	tensorflow_installed = True
-except ImportError:
-	tensorflow_installed = False
-
 # Define the cosmos path
-cosmos_folder = 'test_data/cosmos/'
+test_data_folder = Path(__file__).parent / 'test_data'
+cosmos_folder = test_data_folder / 'cosmos'
 
 
 class GenerateTests(unittest.TestCase):
@@ -22,10 +20,10 @@ class GenerateTests(unittest.TestCase):
 
 	def test_main(self):
 		# Test that the main function makes some images
-		output_folder = 'test_data/test_dataset'
+		output_folder = 'test_dataset'
 		n_generate = 21
 		generate.generate_from_config(
-			config_path='test_data/config_dict.py',
+			config_path=test_data_folder / 'config_dict.py',
 			save_folder=output_folder,
 			n=n_generate,
 			save_png_too=True)
@@ -75,17 +73,16 @@ class GenerateTests(unittest.TestCase):
 			os.remove(os.path.join(output_folder,'image_%07d.png' % i))
 
 		cleanup_cosmos_cache()
-		os.rmdir(output_folder)
+		shutil.rmtree(output_folder)
 
 
 	def test_main_drizzle(self):
 		# Test that the main function makes some images
-		output_folder = 'test_data/test_dataset'
+		output_folder = 'test_dataset'
 		generate.generate_from_config(
-			config_path='test_data/config_dict_drizz.py',
+			config_path=test_data_folder / 'config_dict_drizz.py',
 			save_folder=output_folder,
-			n=10,
-			tf_record=tensorflow_installed)
+			n=10)
 
 		image_file_list = glob.glob(os.path.join(output_folder,'image_*.npy'))
 
@@ -122,20 +119,12 @@ class GenerateTests(unittest.TestCase):
 			self.assertFalse('cross_object' in key)
 			self.assertFalse('source_exclusion_list' in key)
 
-		# Remove the metadata file
-		os.remove(os.path.join(output_folder,'metadata.csv'))
-		os.remove(os.path.join(output_folder,'config_dict_drizz.py'))
-		if tensorflow_installed:
-			os.remove(os.path.join(output_folder,'data.tfrecord'))
-
 		cleanup_cosmos_cache()
-		os.rmdir(output_folder)
+		shutil.rmtree(output_folder)
 
 
 def cleanup_cosmos_cache():
 	"""Clean up the test cosmos cache"""
-	test_cosmo_folder = 'test_data/cosmos/'
-	os.remove(test_cosmo_folder+'paltas_catalog.npy')
-	for i in range(10):
-		os.remove(test_cosmo_folder+'npy_files/img_%d.npy'%(i))
-	os.rmdir(test_cosmo_folder+'npy_files')
+	test_cosmo_folder = test_data_folder / 'cosmos'
+	os.remove(test_cosmo_folder / 'paltas_catalog.npy')
+	shutil.rmtree(test_cosmo_folder / 'npy_files')

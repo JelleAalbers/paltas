@@ -4,8 +4,9 @@ Interact with the paltas configuration files
 
 Classes used to draw relevant parameters from paltas configuration files.
 """
+import importlib
+from pathlib import Path
 import os, sys, warnings, copy
-from importlib import import_module
 import numba
 import numpy as np
 from ..Sampling.sampler import Sampler
@@ -71,7 +72,7 @@ class LenstronomyInputs:
 	def add_lenses(self, models, model_kwargs, redshifts):
 		self.kwargs_model['lens_model_list'] += models
 		self.kwargs_params['kwargs_lens'] += model_kwargs
-		self.kwargs_model['lens_redshift_list']+= redshifts
+		self.kwargs_model['lens_redshift_list'] += redshifts
 
 	def add_sources(self, models, model_kwargs, redshifts):
 		self.kwargs_model['source_light_model_list'] += models
@@ -89,12 +90,22 @@ class LenstronomyInputs:
 
 def load_config_module(config_path):
 	"""Return imported config module from config_path"""
-	config_dir, config_file = os.path.split(os.path.abspath(config_path))
-	sys.path.insert(0, config_dir)
-	config_name, _ = os.path.splitext(config_file)
-	config_module = import_module(config_name)
-	sys.path = sys.path[1:]
-	return config_module
+	return load_py_file(config_path)
+
+
+def load_py_file(path, module_name=None):
+	"""Load .py file from path
+
+	If module name omitted, will use file stem
+	"""
+	if module_name is None:
+		module_name = Path(path).stem
+	# From https://stackoverflow.com/questions/67631
+	spec = importlib.util.spec_from_file_location(module_name, path)
+	module = importlib.util.module_from_spec(spec)
+	spec.loader.exec_module(module)
+	return module
+
 
 
 class ConfigHandler():
@@ -144,6 +155,7 @@ class ConfigHandler():
 			if model_name in self.config_dict:
 				model_class = self.config_dict[model_name]['class']
 				if model_name == 'lens_light':
+					print("Transforming model to lens light class...")
 					# Transform the source class into a lens light class
 					model_class = make_lens_light_class(model_class)
 				model_instance = model_class.init_from_sample(sample)
@@ -162,6 +174,11 @@ class ConfigHandler():
 			self.add_noise = not self.config_module.no_noise
 		else:
 			self.add_noise = True
+
+		# See if we should simulate sky-background-subtracted images
+		# (default lenstronomy behaviour), or leave the constant background in
+		self.subtract_sky = self.config_dict['detector']['parameters'].get('subtract_sky', True)
+
 
 	def draw_new_sample(self):
 		"""Draws a new sample from the config sampler.
@@ -384,7 +401,7 @@ class ConfigHandler():
 				else:
 					metadata[pfix+'time_delay_' + str(i)] = np.nan
 
-	def _draw_image_standard(self,add_noise=True,apply_psf=True):
+	def _draw_image_standard(self,add_noise=True,apply_psf=True,subtract_sky=True):
 		"""Uses the current config sample to generate an image and the
 		associated metadata.
 
@@ -393,6 +410,8 @@ class ConfigHandler():
 				True.
 			apply_psf (bool): If False, the psf will not be applied. Defaults
 				to True.
+			subtract_sky (bool): Whether to simulate sky-background subtracted
+				images (True), or leave mean of the sky background in (False)
 		Returns:
 			(np.array,dict): A tuple containing a numpy array of the generated
 			image and a metavalue dictionary with the corresponding sampled
@@ -465,16 +484,19 @@ class ConfigHandler():
 			if mag < self.mag_cut:
 				raise MagnificationError(self.mag_cut)
 
-		# Add constant sky brightness
-		# Note lenstronomy's sky brightness is in counts/square arcsec, 
-		# so to get the value per pixel, we have to multiply by resolution^2
-		image += single_band._sky_brightness_cps * kwargs_detector['pixel_scale']**2
+		if not subtract_sky:
+			# Add constant sky brightness
+			# Note lenstronomy's sky brightness is in counts/square arcsec, 
+			# so to get the value per pixel, we have to multiply by resolution^2
+			image += single_band._sky_brightness_cps * kwargs_detector['pixel_scale']**2
+
+			# We added the sky brightness to the image, so don't let lenstronomy
+			# consider it as an additional light source
+			# TODO: Ugly hack
+			single_band.update_observation(sky_brightness=np.inf)
 
 		# If noise is specified, add it.
 		if add_noise:
-			# We added the sky brightness to the image, so don't let lenstronomy
-			# consider it as an additional light source
-			single_band._sky_brightness_cps = 0
 			image += single_band.noise_for_model(image)
 
 		# Extract the metadata from the sample
@@ -546,6 +568,7 @@ class ConfigHandler():
 		# noise.
 		try:
 			image_ss, metadata = self._draw_image_standard(add_noise=False,
+				subtract_sky=self.subtract_sky,
 				apply_psf=False)
 		except MagnificationError:
 			# Reset the class properties that were modified, then reraise
@@ -652,7 +675,7 @@ class ConfigHandler():
 		if new_sample:
 			self.draw_new_sample()
 
-		# Use the appropraite generation function
+		# Use the appropriate generation function
 		try:
 			if self.do_drizzle:
 				image,metadata = self._draw_image_drizzle()
@@ -660,7 +683,8 @@ class ConfigHandler():
 				# _draw_image_standard has a seperate add_noise parameter so
 				# it can be used by _draw_image_drizzle.
 				image,metadata = self._draw_image_standard(
-					add_noise=self.add_noise)
+					add_noise=self.add_noise,
+					subtract_sky=self.subtract_sky)
 		except MagnificationError:
 			# Magnification cut was not met, return None,None
 			return None, None

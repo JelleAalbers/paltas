@@ -106,21 +106,7 @@ def generate_from_config(
 	# Generate tf record if requested. Save all the parameters and use default
 	# filename data.tfrecord
 	if tf_record:
-		# Delayed import, triggers tensorflow import
-		from paltas.Analysis import dataset_generation
-
-		# The path to save the TFRecord to.
-		tf_record_path = os.path.join(save_folder,'data.tfrecord')
-		# Generate the list of learning parameters. Only save learning
-		# parameters with associated float values.
-		learning_params = []
-		for key in metadata:
-			if (isinstance(metadata[key],float) or
-				isinstance(metadata[key],int)):
-				learning_params.append(key)
-		# Generate the TFRecord
-		dataset_generation.generate_tf_record(save_folder,learning_params,
-			metadata_path,tf_record_path)
+		print("paltas.Analysis has been removed, get your tfrecords elsewhere")
 
 
 if __name__ == '__main__':

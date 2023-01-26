@@ -28,3 +28,6 @@ datasets/cosmos
 
 # Network that may be downloaded during testing
 test/xresnet34_full_final.h5
+
+# Network weights
+*.h5
