@@ -10,27 +10,27 @@ import paltas
 
 
 class PointSourceBase(paltas.BaseComponent):
-	"""
-	Base class for producing lenstronomy PointSource arguments
+    """
+    Base class for producing lenstronomy PointSource arguments
 
-	Args:
-		point_source_parameters (dict): dictionary with source-specific 
-			parameters.
+    Args:
+        point_source_parameters (dict): dictionary with source-specific 
+            parameters.
 
-	Notes:
-		Has no required parameters by default.
-	"""
+    Notes:
+        Has no required parameters by default.
+    """
 
-	init_kwargs = ('point_source_parameters',)
+    init_kwargs = ('point_source_parameters',)
 
-	def draw_point_source(self):
-		"""Return lenstronomy PointSource names and kwargs
+    def draw_point_source(self):
+        """Return lenstronomy PointSource names and kwargs
 
-		Returns:
-			(list,list) A list containing the model name(s), and
-			a list containing the model kwargs dictionaries.
-		"""
-		raise NotImplementedError
+        Returns:
+            (list,list) A list containing the model name(s), and
+            a list containing the model kwargs dictionaries.
+        """
+        raise NotImplementedError
 
-	def draw(self, result, **kwargs):
-		result.add_point_sources(*self.draw_point_source())
+    def draw(self, result, **kwargs):
+        result.add_point_sources(*self.draw_point_source())

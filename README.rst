@@ -13,7 +13,7 @@
     :target: https://github.com/swagnercarena/paltas/actions
 
 .. image:: https://coveralls.io/repos/github/swagnercarena/paltas/badge.svg?branch=main
-	:target: https://coveralls.io/github/swagnercarena/paltas?branch=main
+    :target: https://coveralls.io/github/swagnercarena/paltas?branch=main
 
 .. image:: https://readthedocs.org/projects/paltas/badge/?version=latest
     :target: https://paltas.readthedocs.io/en/latest

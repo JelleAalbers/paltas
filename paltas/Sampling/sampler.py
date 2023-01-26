@@ -12,7 +12,7 @@ from scipy._lib._util import check_random_state
 # Definte the components we need the sampler to consider.
 # TODO: add point source & lens light
 lensing_components = ['subhalo','los','main_deflector','source','lens_light',
-	'point_source','lens_equation_solver','cosmology','psf','detector','drizzle']
+    'point_source','lens_equation_solver','cosmology','psf','detector','drizzle']
 
 # Global filters on the python warnings. Using this since filter
 # behaviour is a bit weird.
@@ -20,116 +20,116 @@ CROSSOBJECTWARNING = True
 
 
 class Sampler():
-	"""Class for drawing lens parameter values from input distribution
-	dictionaries
+    """Class for drawing lens parameter values from input distribution
+    dictionaries
 
-	Args:
-		configuration_dictionary (dict): An instance of the configuration
-			dictionary that will be used to decide how to sample parameter
-			values.
-	Notes:
-		For examples on how to configure the dict object, see the
-		ConfigurationDict.ipynb example notebook.
-	"""
+    Args:
+        configuration_dictionary (dict): An instance of the configuration
+            dictionary that will be used to decide how to sample parameter
+            values.
+    Notes:
+        For examples on how to configure the dict object, see the
+        ConfigurationDict.ipynb example notebook.
+    """
 
-	def __init__(self,configuration_dictionary):
-		self.config_dict = configuration_dictionary
+    def __init__(self,configuration_dictionary):
+        self.config_dict = configuration_dictionary
 
-	@staticmethod
-	def draw_from_dict(draw_dict):
-		"""Populates a dict with samples drawn from the specified distributions
-		in the input dict.
+    @staticmethod
+    def draw_from_dict(draw_dict):
+        """Populates a dict with samples drawn from the specified distributions
+        in the input dict.
 
-		Args:
-			draw_dict (dict): The dictionary containing keys mapping to values
-				or distributions for each parameter.
+        Args:
+            draw_dict (dict): The dictionary containing keys mapping to values
+                or distributions for each parameter.
 
-		Returns:
-			(dict): A dict with a drawn value for each parameter.
+        Returns:
+            (dict): A dict with a drawn value for each parameter.
 
-		Notes:
-			Multivariate distribution for parameters should have a key of the
-			form 'param_1,param_2,param_3'.
-		"""
-		param_dict = {}
+        Notes:
+            Multivariate distribution for parameters should have a key of the
+            form 'param_1,param_2,param_3'.
+        """
+        param_dict = {}
 
-		# Iterate through the keys in the draw_dict and populate the values of
-		# param_dict correctly.
-		for key in sorted(draw_dict):
+        # Iterate through the keys in the draw_dict and populate the values of
+        # param_dict correctly.
+        for key in sorted(draw_dict):
 
-			value = draw_dict[key]
+            value = draw_dict[key]
 
-			# Dirty workaround for https://github.com/scipy/scipy/issues/16998
-			# Explicitly ensure the distributions use the global random state
-			if hasattr(value, '__self__'):
-				# Scipy distribution
-				value.__self__.random_state = check_random_state(None)
-			elif hasattr(value, 'dist'):
-				# Duplicate or MultipleValues. 
-				# Other custom paltas dists not yet supported..
-				value.dist.__self__.random_state = check_random_state(None)
+            # Dirty workaround for https://github.com/scipy/scipy/issues/16998
+            # Explicitly ensure the distributions use the global random state
+            if hasattr(value, '__self__'):
+                # Scipy distribution
+                value.__self__.random_state = check_random_state(None)
+            elif hasattr(value, 'dist'):
+                # Duplicate or MultipleValues. 
+                # Other custom paltas dists not yet supported..
+                value.dist.__self__.random_state = check_random_state(None)
 
-			if callable(value):
-				# Sampling function: call to draw
-				draw = value()
-			else:
-				# Fixed value
-				draw = value
+            if callable(value):
+                # Sampling function: call to draw
+                draw = value()
+            else:
+                # Fixed value
+                draw = value
 
-			# If the key implies that multiple parameters will be drawn from
-			# the distribution, draw the value and then iterate through the
-			# parameters.
-			if ',' in key:
-				# Get the parameters, removing whitespace
-				params = key.replace(' ','').split(',')
-				# Check for consistency
-				if len(params) != len(draw):
-					raise ValueError('Parameters of length %d do'%(len(params))
-						+ ' not match draw of length %d'%(len(draw)))
-				# Populate the keys
-				for i, param in enumerate(params):
-					param_dict[param] = draw[i]
-			else:
-				param_dict[key] = draw
+            # If the key implies that multiple parameters will be drawn from
+            # the distribution, draw the value and then iterate through the
+            # parameters.
+            if ',' in key:
+                # Get the parameters, removing whitespace
+                params = key.replace(' ','').split(',')
+                # Check for consistency
+                if len(params) != len(draw):
+                    raise ValueError('Parameters of length %d do'%(len(params))
+                        + ' not match draw of length %d'%(len(draw)))
+                # Populate the keys
+                for i, param in enumerate(params):
+                    param_dict[param] = draw[i]
+            else:
+                param_dict[key] = draw
 
-		return param_dict
+        return param_dict
 
-	def sample(self):
-		"""Samples from the distributions given in the configuration
-		dictionary
+    def sample(self):
+        """Samples from the distributions given in the configuration
+        dictionary
 
-		Returns:
-			(dict): A dictionary containing the parameter values that will
-			be sampled.
-		"""
-		# Pull the global warning variable and initialize our dict
-		global CROSSOBJECTWARNING
-		full_param_dict = {}
+        Returns:
+            (dict): A dictionary containing the parameter values that will
+            be sampled.
+        """
+        # Pull the global warning variable and initialize our dict
+        global CROSSOBJECTWARNING
+        full_param_dict = {}
 
-		# For each possible component of our lensing add the parameters
-		for component in lensing_components:
-			if component in self.config_dict:
-				draw_dict = self.config_dict[component]['parameters']
-				param_dict = self.draw_from_dict(draw_dict)
-				full_param_dict[component+'_parameters'] = param_dict
+        # For each possible component of our lensing add the parameters
+        for component in lensing_components:
+            if component in self.config_dict:
+                draw_dict = self.config_dict[component]['parameters']
+                param_dict = self.draw_from_dict(draw_dict)
+                full_param_dict[component+'_parameters'] = param_dict
 
-		# Populate parameters from distributions that span accross objects.
-		if 'cross_object' in self.config_dict:
-			draw_dict = self.config_dict['cross_object']['parameters']
-			cross_dict = self.draw_from_dict(draw_dict)
-			# Go through the params and update the full dict
-			for cross_param in cross_dict:
-				component, param = cross_param.split(':')
-				param_dict = full_param_dict[component+'_parameters']
-				# Warn the user the first time an overwrite happens
-				if param in param_dict and CROSSOBJECTWARNING:
-					warnings.warn('Parameter %s in cross dict specified '%(param)
-						+ 'elsewhere! Will be overwritten. This warning only ' +
-						'flags once, but other parameters may also be ' +
-						'overwritten.')
-					CROSSOBJECTWARNING = False
-				full_param_dict[component+'_parameters'][param] = (
-					cross_dict[cross_param])
+        # Populate parameters from distributions that span accross objects.
+        if 'cross_object' in self.config_dict:
+            draw_dict = self.config_dict['cross_object']['parameters']
+            cross_dict = self.draw_from_dict(draw_dict)
+            # Go through the params and update the full dict
+            for cross_param in cross_dict:
+                component, param = cross_param.split(':')
+                param_dict = full_param_dict[component+'_parameters']
+                # Warn the user the first time an overwrite happens
+                if param in param_dict and CROSSOBJECTWARNING:
+                    warnings.warn('Parameter %s in cross dict specified '%(param)
+                        + 'elsewhere! Will be overwritten. This warning only ' +
+                        'flags once, but other parameters may also be ' +
+                        'overwritten.')
+                    CROSSOBJECTWARNING = False
+                full_param_dict[component+'_parameters'][param] = (
+                    cross_dict[cross_param])
 
-		# Populate the cross objects
-		return full_param_dict
+        # Populate the cross objects
+        return full_param_dict
