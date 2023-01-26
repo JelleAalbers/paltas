@@ -14,14 +14,14 @@ class PointSourceBase(paltas.BaseComponent):
     Base class for producing lenstronomy PointSource arguments
 
     Args:
-        point_source_parameters (dict): dictionary with source-specific 
+        point_source_parameters (dict): dictionary with source-specific
             parameters.
 
     Notes:
         Has no required parameters by default.
     """
 
-    init_kwargs = ('point_source_parameters',)
+    init_kwargs = ("point_source_parameters",)
 
     def draw_point_source(self):
         """Return lenstronomy PointSource names and kwargs

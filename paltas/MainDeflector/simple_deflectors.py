@@ -34,14 +34,22 @@ class PEMD(MainDeflectorBase):
     - center_y - y-coordinate lens center in units of arcseconds
     - z_lens - main deflector redshift
     """
-    # Define the parameters we expect to find for the DG_19 model
-    required_parameters = ('gamma','theta_E','e1','e2','center_x',
-        'center_y','z_lens')
 
-    def __init__(self,main_deflector_parameters,cosmology_parameters):
+    # Define the parameters we expect to find for the DG_19 model
+    required_parameters = (
+        "gamma",
+        "theta_E",
+        "e1",
+        "e2",
+        "center_x",
+        "center_y",
+        "z_lens",
+    )
+
+    def __init__(self, main_deflector_parameters, cosmology_parameters):
 
         # Initialize the super class
-        super().__init__(main_deflector_parameters,cosmology_parameters)
+        super().__init__(main_deflector_parameters, cosmology_parameters)
 
     def draw_main_deflector(self):
         """Draws the lenstronomy profile names and kwargs for the components
@@ -55,18 +63,17 @@ class PEMD(MainDeflectorBase):
         """
         # The lists of model parameters, kwargs, and redshifts can all be
         # pulled fairly directly from the main_deflecctor_parameters
-        md_model_list = ['EPL_NUMBA']
+        md_model_list = ["EPL_NUMBA"]
         md_kwargs_list = []
-        md_z_list = [self.main_deflector_parameters['z_lens']] * len(
-            md_model_list)
+        md_z_list = [self.main_deflector_parameters["z_lens"]] * len(md_model_list)
 
         # Use lenstronomy to sort the parameters
         for model in md_model_list:
             # The list of parameters linked to that lenstronomy model
-            p_names = ProfileListBase._import_class(model,None,None).param_names
+            p_names = ProfileListBase._import_class(model, None, None).param_names
             model_kwargs = {}
             for param in p_names:
-                model_kwargs[param] = (self.main_deflector_parameters[param])
+                model_kwargs[param] = self.main_deflector_parameters[param]
             md_kwargs_list += [model_kwargs]
 
         return md_model_list, md_kwargs_list, md_z_list
@@ -101,14 +108,26 @@ class PEMDShear(MainDeflectorBase):
     - dec_0 - dec origin of shear in units of arcseconds
     - z_lens - main deflector redshift
     """
-    # Define the parameters we expect to find for the DG_19 model
-    required_parameters = ('gamma','theta_E','e1','e2','center_x',
-        'center_y','gamma1','gamma2','ra_0','dec_0','z_lens')
 
-    def __init__(self,main_deflector_parameters,cosmology_parameters):
+    # Define the parameters we expect to find for the DG_19 model
+    required_parameters = (
+        "gamma",
+        "theta_E",
+        "e1",
+        "e2",
+        "center_x",
+        "center_y",
+        "gamma1",
+        "gamma2",
+        "ra_0",
+        "dec_0",
+        "z_lens",
+    )
+
+    def __init__(self, main_deflector_parameters, cosmology_parameters):
 
         # Initialize the super class
-        super().__init__(main_deflector_parameters,cosmology_parameters)
+        super().__init__(main_deflector_parameters, cosmology_parameters)
 
     def draw_main_deflector(self):
         """Draws the lenstronomy profile names and kwargs for the components
@@ -122,18 +141,17 @@ class PEMDShear(MainDeflectorBase):
         """
         # The lists of model parameters, kwargs, and redshifts can all be
         # pulled fairly directly from the main_deflecctor_parameters
-        md_model_list = ['EPL_NUMBA','SHEAR']
+        md_model_list = ["EPL_NUMBA", "SHEAR"]
         md_kwargs_list = []
-        md_z_list = [self.main_deflector_parameters['z_lens']] * len(
-            md_model_list)
+        md_z_list = [self.main_deflector_parameters["z_lens"]] * len(md_model_list)
 
         # Use lenstronomy to sort the parameters
         for model in md_model_list:
             # The list of parameters linked to that lenstronomy model
-            p_names = ProfileListBase._import_class(model,None,None).param_names
+            p_names = ProfileListBase._import_class(model, None, None).param_names
             model_kwargs = {}
             for param in p_names:
-                model_kwargs[param] = (self.main_deflector_parameters[param])
+                model_kwargs[param] = self.main_deflector_parameters[param]
             md_kwargs_list += [model_kwargs]
 
         return md_model_list, md_kwargs_list, md_z_list
@@ -183,16 +201,27 @@ class PEMDShearFourMultipole(PEMDShear):
     - mult4_center_y - y-coordinate multipole order 2 center in units of
     arcseconds
     """
-    # Define the parameters we expect to find for the DG_19 model
-    required_parameters = PEMDShear.required_parameters + ('mult2_a',
-        'mult2_phi','mult2_center_x','mult2_center_y','mult3_a','mult3_phi',
-        'mult3_center_x','mult3_center_y','mult4_a','mult4_phi',
-        'mult4_center_x','mult4_center_y')
 
-    def __init__(self,main_deflector_parameters,cosmology_parameters):
+    # Define the parameters we expect to find for the DG_19 model
+    required_parameters = PEMDShear.required_parameters + (
+        "mult2_a",
+        "mult2_phi",
+        "mult2_center_x",
+        "mult2_center_y",
+        "mult3_a",
+        "mult3_phi",
+        "mult3_center_x",
+        "mult3_center_y",
+        "mult4_a",
+        "mult4_phi",
+        "mult4_center_x",
+        "mult4_center_y",
+    )
+
+    def __init__(self, main_deflector_parameters, cosmology_parameters):
 
         # Initialize the super class
-        super().__init__(main_deflector_parameters,cosmology_parameters)
+        super().__init__(main_deflector_parameters, cosmology_parameters)
 
     def draw_main_deflector(self):
         """Draws the lenstronomy profile names and kwargs for the components
@@ -204,23 +233,25 @@ class PEMDShearFourMultipole(PEMDShear):
             redshift for each component.
         """
         # Get the first set of lists directly from the inherited class
-        md_model_list, md_kwargs_list, md_z_list = (
-            super().draw_main_deflector())
+        md_model_list, md_kwargs_list, md_z_list = super().draw_main_deflector()
         # Now add the three multipole models.
-        for mult_i in range(2,5):
+        for mult_i in range(2, 5):
             # Only add multipole models with non zero strength.
-            if self.main_deflector_parameters['mult%d_a'%(mult_i)] > 0:
-                md_model_list += ['MULTIPOLE']
+            if self.main_deflector_parameters["mult%d_a" % (mult_i)] > 0:
+                md_model_list += ["MULTIPOLE"]
                 # Initialize the model kwargs for this multipole model
-                model_kwargs = {'m':mult_i,
-                    'a_m':self.main_deflector_parameters['mult%d_a'%(mult_i)],
-                    'phi_m':self.main_deflector_parameters[
-                        'mult%d_phi'%(mult_i)],
-                    'center_x':self.main_deflector_parameters[
-                        'mult%d_center_x'%(mult_i)],
-                    'center_y':self.main_deflector_parameters[
-                        'mult%d_center_y'%(mult_i)]}
+                model_kwargs = {
+                    "m": mult_i,
+                    "a_m": self.main_deflector_parameters["mult%d_a" % (mult_i)],
+                    "phi_m": self.main_deflector_parameters["mult%d_phi" % (mult_i)],
+                    "center_x": self.main_deflector_parameters[
+                        "mult%d_center_x" % (mult_i)
+                    ],
+                    "center_y": self.main_deflector_parameters[
+                        "mult%d_center_y" % (mult_i)
+                    ],
+                }
                 md_kwargs_list += [model_kwargs]
-                md_z_list += [self.main_deflector_parameters['z_lens']]
+                md_z_list += [self.main_deflector_parameters["z_lens"]]
 
         return md_model_list, md_kwargs_list, md_z_list

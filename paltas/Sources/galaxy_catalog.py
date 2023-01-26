@@ -44,11 +44,20 @@ class GalaxyCatalog(SourceBase):
         assumed True.
 
     """
-    required_parameters = ('random_rotation','output_ab_zeropoint',
-        'z_source','center_x','center_y')
-    optional_parameters = ('source_absolute_magnitude', 
-        'pixel_width_multiplier', 'brightness_multiplier',
-        'include_k_correction')
+
+    required_parameters = (
+        "random_rotation",
+        "output_ab_zeropoint",
+        "z_source",
+        "center_x",
+        "center_y",
+    )
+    optional_parameters = (
+        "source_absolute_magnitude",
+        "pixel_width_multiplier",
+        "brightness_multiplier",
+        "include_k_correction",
+    )
     # This parameter must be set by class inheriting GalaxyCatalog
     ab_zeropoint = None
 
@@ -57,7 +66,7 @@ class GalaxyCatalog(SourceBase):
         raise NotImplementedError
 
     def check_parameterization(self, required_params):
-        """ Check that all the required parameters are present in the
+        """Check that all the required parameters are present in the
         source_parameters. Also checks ab_zeropoint is set.
 
         Args:
@@ -67,10 +76,13 @@ class GalaxyCatalog(SourceBase):
         # Run the base check
         super().check_parameterization(required_params)
         # Check ab magnitude zeropoint has been set
-        if (self.__class__.__name__ != 'GalaxyCatalog' and
-            self.__class__.ab_zeropoint is None):
-            raise ValueError('ab_zeropoint must be set by class inheriting '+
-                'GalaxyCatalog.')
+        if (
+            self.__class__.__name__ != "GalaxyCatalog"
+            and self.__class__.ab_zeropoint is None
+        ):
+            raise ValueError(
+                "ab_zeropoint must be set by class inheriting " + "GalaxyCatalog."
+            )
 
     def image_and_metadata(self, catalog_i):
         """Returns the image array and metadata for one galaxy
@@ -85,8 +97,7 @@ class GalaxyCatalog(SourceBase):
         """
         raise NotImplementedError
 
-    def iter_lightmodel_kwargs_samples(self,n_galaxies,z_new,
-        **selection_kwargs):
+    def iter_lightmodel_kwargs_samples(self, n_galaxies, z_new, **selection_kwargs):
         """Yields dicts of lenstronomy LightModel kwargs for n_galaxies,
         placed at redshift z_new
 
@@ -100,10 +111,10 @@ class GalaxyCatalog(SourceBase):
             (generator): A generator that can be iterated over to give
             lenstronomy model lists and kwargs.
         """
-        for catalog_i in self.sample_indices(n_galaxies,**selection_kwargs):
+        for catalog_i in self.sample_indices(n_galaxies, **selection_kwargs):
             yield self.draw_source(catalog_i)[:2]
 
-    def iter_image_and_metadata(self, message=''):
+    def iter_image_and_metadata(self, message=""):
         """Yields the image array and metadata for all of the images
         in the catalog.
 
@@ -141,14 +152,14 @@ class GalaxyCatalog(SourceBase):
         """
         # If no index is provided pick one at random
         if catalog_i is None:
-            if self.source_parameters.get('fix_catalog_i') is None:
+            if self.source_parameters.get("fix_catalog_i") is None:
                 catalog_i = self.sample_indices(1).item()
             else:
-                catalog_i = self.source_parameters['fix_catalog_i']
+                catalog_i = self.source_parameters["fix_catalog_i"]
         # If no rotation is provided, pick one at random or use original
         # orientation
         if phi is None:
-            if self.source_parameters['random_rotation']:
+            if self.source_parameters["random_rotation"]:
                 phi = self.draw_phi()
             else:
                 phi = 0
@@ -176,8 +187,8 @@ class GalaxyCatalog(SourceBase):
         """
         catalog_i, phi = self.fill_catalog_i_phi_defaults(catalog_i, phi)
         img, metadata = self.image_and_metadata(catalog_i)
-        pixel_width = metadata['pixel_width']
-        z_new = self.source_parameters['z_source']
+        pixel_width = metadata["pixel_width"]
+        z_new = self.source_parameters["z_source"]
 
         # With this, lenstronomy will preserve the scale/units of
         # the input image (in a configuration without lensing,
@@ -187,44 +198,60 @@ class GalaxyCatalog(SourceBase):
         # Take into account the difference in the magnitude zeropoints
         # of the input survey and the output survey. Note this doesn't
         # take into account the color of the object!
-        img *= 10**((self.source_parameters['output_ab_zeropoint']-
-            self.__class__.ab_zeropoint)/2.5)
-        img *= self.source_parameters.get('brightness_multiplier', 1)
+        img *= 10 ** (
+            (
+                self.source_parameters["output_ab_zeropoint"]
+                - self.__class__.ab_zeropoint
+            )
+            / 2.5
+        )
+        img *= self.source_parameters.get("brightness_multiplier", 1)
 
-        pixel_width *= self.z_scale_factor(metadata['z'], z_new)
+        pixel_width *= self.z_scale_factor(metadata["z"], z_new)
 
         # Option to artificially make sources bigger or smaller
         # (with constant surface brightness, so changing total flux)
-        pixel_width *= self.source_parameters.get('pixel_width_multiplier', 1)
+        pixel_width *= self.source_parameters.get("pixel_width_multiplier", 1)
 
-        if self.source_parameters.get('include_k_correction', True):
+        if self.source_parameters.get("include_k_correction", True):
             # Apply the k correction to the image from the redshifting
-            self.k_correct_image(img,metadata['z'],z_new)
+            self.k_correct_image(img, metadata["z"], z_new)
 
         # If a desired absolute magnitude was specified, scale the image
         # accordingly
-        if 'source_absolute_magnitude' in self.source_parameters:
+        if "source_absolute_magnitude" in self.source_parameters:
             mag_apparent = absolute_to_apparent(
-                self.source_parameters['source_absolute_magnitude'],
-                self.source_parameters['z_source'],
+                self.source_parameters["source_absolute_magnitude"],
+                self.source_parameters["z_source"],
                 self.cosmo,
-                include_k_correction=self.source_parameters.get('include_k_correction', True))
-            self.normalize_to_mag(img,mag_apparent,
-                self.source_parameters['output_ab_zeropoint'],pixel_width)
+                include_k_correction=self.source_parameters.get(
+                    "include_k_correction", True
+                ),
+            )
+            self.normalize_to_mag(
+                img,
+                mag_apparent,
+                self.source_parameters["output_ab_zeropoint"],
+                pixel_width,
+            )
 
         # Convert to kwargs for lenstronomy
         return (
-            ['INTERPOL'],
-            [dict(
-                image=img,
-                center_x=self.source_parameters['center_x'],
-                center_y=self.source_parameters['center_y'],
-                phi_G=phi,
-                scale=pixel_width)],
-            [z_new])
+            ["INTERPOL"],
+            [
+                dict(
+                    image=img,
+                    center_x=self.source_parameters["center_x"],
+                    center_y=self.source_parameters["center_y"],
+                    phi_G=phi,
+                    scale=pixel_width,
+                )
+            ],
+            [z_new],
+        )
 
     @staticmethod
-    def k_correct_image(image,z_original,z_new):
+    def k_correct_image(image, z_original, z_new):
         """Apply the k-correction to the image at the pixel level.
 
         Args:
@@ -239,10 +266,10 @@ class GalaxyCatalog(SourceBase):
         mag_k_correct = get_k_correction(z_new) - get_k_correction(z_original)
 
         # Apply the correction
-        image *= 10**(-mag_k_correct/2.5)
+        image *= 10 ** (-mag_k_correct / 2.5)
 
     @staticmethod
-    def normalize_to_mag(image,mag_apparent,mag_zero_point,pixel_width):
+    def normalize_to_mag(image, mag_apparent, mag_zero_point, pixel_width):
         """Renormalizes and image so that it has the specified apparent
         magnitude.
 
@@ -261,7 +288,7 @@ class GalaxyCatalog(SourceBase):
         flux_true = magnitude2cps(mag_apparent, mag_zero_point)
 
         # Rescale the image so that both values match
-        image *= flux_true/flux_total
+        image *= flux_true / flux_total
 
     @staticmethod
     def draw_phi():
@@ -286,9 +313,9 @@ class GalaxyCatalog(SourceBase):
         # Pixel length ~ angular diameter distance
         # (colossus uses funny /h units, but for ratios it
         #  fortunately doesn't matter)
-        return (
-            self.cosmo.angularDiameterDistance(z_old)
-            / self.cosmo.angularDiameterDistance(z_new))
+        return self.cosmo.angularDiameterDistance(
+            z_old
+        ) / self.cosmo.angularDiameterDistance(z_new)
 
     def draw(self, result, *, sample, **kwargs):
         # For catalog objects we also want to save the catalog index
@@ -296,12 +323,10 @@ class GalaxyCatalog(SourceBase):
         # therefore push these back into the sample object.
         catalog_i, phi = self.fill_catalog_i_phi_defaults()
         if self.is_lens_light:
-            result.add_lens_light(
-                *self.draw_source(catalog_i=catalog_i, phi=phi))
-            sample['lens_light_parameters']['catalog_i'] = catalog_i
-            sample['lens_light_parameters']['phi'] = phi
+            result.add_lens_light(*self.draw_source(catalog_i=catalog_i, phi=phi))
+            sample["lens_light_parameters"]["catalog_i"] = catalog_i
+            sample["lens_light_parameters"]["phi"] = phi
         else:
-            result.add_sources(
-                *self.draw_source(catalog_i=catalog_i, phi=phi))
-            sample['source_parameters']['catalog_i'] = catalog_i
-            sample['source_parameters']['phi'] = phi
+            result.add_sources(*self.draw_source(catalog_i=catalog_i, phi=phi))
+            sample["source_parameters"]["catalog_i"] = catalog_i
+            sample["source_parameters"]["phi"] = phi

@@ -21,7 +21,7 @@ class MainDeflectorBase(paltas.BaseComponent):
             dict with H0 and Om0 ( other parameters will be set to defaults).
     """
 
-    init_kwargs = ('main_deflector_parameters', 'cosmology_parameters')
+    init_kwargs = ("main_deflector_parameters", "cosmology_parameters")
 
     def draw_main_deflector(self):
         """Draws the lenstronomy profile names and kwargs for the components

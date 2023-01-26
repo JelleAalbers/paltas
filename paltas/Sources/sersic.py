@@ -51,10 +51,19 @@ class SingleSersicSource(SourceBase):
         if omitted, use 1.
     """
 
-    required_parameters = ('magnitude','output_ab_zeropoint','R_sersic',
-        'n_sersic','e1','e2','center_x','center_y','z_source')
+    required_parameters = (
+        "magnitude",
+        "output_ab_zeropoint",
+        "R_sersic",
+        "n_sersic",
+        "e1",
+        "e2",
+        "center_x",
+        "center_y",
+        "z_source",
+    )
 
-    optional_parameters = ('include_k_correction', 'brightness_multiplier')
+    optional_parameters = ("include_k_correction", "brightness_multiplier")
 
     def draw_source(self):
         """Return lenstronomy LightModel kwargs
@@ -66,53 +75,59 @@ class SingleSersicSource(SourceBase):
             be None.
         """
         # Just extract each of the sersic parameters.
-        sersic_params ={
+        sersic_params = {
             k: v
             for k, v in self.source_parameters.items()
-            if k in self.required_parameters}
-        sersic_params.pop('z_source')
-        sersic_params.pop('output_ab_zeropoint')
+            if k in self.required_parameters
+        }
+        sersic_params.pop("z_source")
+        sersic_params.pop("output_ab_zeropoint")
 
         # mag to amp conversion
-        sersic_params.pop('magnitude')
+        sersic_params.pop("magnitude")
         mag_apparent = absolute_to_apparent(
-            self.source_parameters['magnitude'],
-            self.source_parameters['z_source'],
+            self.source_parameters["magnitude"],
+            self.source_parameters["z_source"],
             self.cosmo,
-            include_k_correction=self.source_parameters.get('include_k_correction', True))
-        sersic_params['amp'] = SingleSersicSource.mag_to_amplitude(
-            mag_apparent,self.source_parameters['output_ab_zeropoint'],
-            sersic_params)
-        sersic_params['amp'] *= self.source_parameters.get('brightness_multiplier', 1)
+            include_k_correction=self.source_parameters.get(
+                "include_k_correction", True
+            ),
+        )
+        sersic_params["amp"] = SingleSersicSource.mag_to_amplitude(
+            mag_apparent, self.source_parameters["output_ab_zeropoint"], sersic_params
+        )
+        sersic_params["amp"] *= self.source_parameters.get("brightness_multiplier", 1)
         return (
-            ['SERSIC_ELLIPSE'],
-            [sersic_params],[self.source_parameters['z_source']])
+            ["SERSIC_ELLIPSE"],
+            [sersic_params],
+            [self.source_parameters["z_source"]],
+        )
 
     @staticmethod
-    def mag_to_amplitude(mag_apparent,mag_zeropoint,kwargs_list):
+    def mag_to_amplitude(mag_apparent, mag_zeropoint, kwargs_list):
         """Converts a user defined magnitude to the corresponding amplitude
         that lenstronomy will use
-    
+
         Args:
             mag_apparent (float): The desired apparent magnitude
             mag_zeropoint (float): The magnitude zero-point of the detector
             kwargs_list (dict): A dict of kwargs for SERSIC_ELLIPSE, amp
                 parameter not included
 
-        Returns: 
+        Returns:
             (float): amplitude lenstronomy should use to get desired magnitude
             desired magnitude
         """
 
-        sersic_model = LightModel(['SERSIC_ELLIPSE'])
+        sersic_model = LightModel(["SERSIC_ELLIPSE"])
         # norm=True sets amplitude = 1
         flux_norm = sersic_model.total_flux([kwargs_list], norm=True)[0]
         flux_true = magnitude2cps(mag_apparent, mag_zeropoint)
-        
-        return flux_true/flux_norm
+
+        return flux_true / flux_norm
 
     @staticmethod
-    def get_total_sersic_flux_r(r,R_sersic,n_sersic,amp_sersic):
+    def get_total_sersic_flux_r(r, R_sersic, n_sersic, amp_sersic):
         """Returns the total sersic flux within a radius r.
 
         Args:
@@ -130,14 +145,16 @@ class SingleSersicSource(SourceBase):
         """
         # Calculate the total flux from the analytic expression
         b_n = sersic_utils.SersicUtil.b_n(n_sersic)
-        total = R_sersic**2*2*np.pi*n_sersic*np.exp(b_n)/(b_n**(2*n_sersic))
-        total *= gammainc(2*n_sersic,b_n*(r/R_sersic)**(1/n_sersic))
-        total *= gamma(2*n_sersic)
+        total = (
+            R_sersic**2 * 2 * np.pi * n_sersic * np.exp(b_n) / (b_n ** (2 * n_sersic))
+        )
+        total *= gammainc(2 * n_sersic, b_n * (r / R_sersic) ** (1 / n_sersic))
+        total *= gamma(2 * n_sersic)
         total *= amp_sersic
         return total
 
     @staticmethod
-    def get_total_sersic_flux(R_sersic,n_sersic,amp_sersic):
+    def get_total_sersic_flux(R_sersic, n_sersic, amp_sersic):
         """Returns the total sersic flux.
 
         Args:
@@ -152,8 +169,10 @@ class SingleSersicSource(SourceBase):
         """
         # Calculate the total flux from the analytic expression
         b_n = sersic_utils.SersicUtil.b_n(n_sersic)
-        total = R_sersic**2*2*np.pi*n_sersic*np.exp(b_n)/(b_n**(2*n_sersic))
-        total *= gamma(2*n_sersic)
+        total = (
+            R_sersic**2 * 2 * np.pi * n_sersic * np.exp(b_n) / (b_n ** (2 * n_sersic))
+        )
+        total *= gamma(2 * n_sersic)
         total *= amp_sersic
         return total
 
@@ -186,9 +205,21 @@ class DoubleSersicData(SingleSersicSource):
     - z_source - light source redshift (should be the same as main deflector)
     """
 
-    required_parameters = ('magnitude', 'f_bulge', 'output_ab_zeropoint',
-        'n_bulge','n_disk','r_disk_bulge','e1_bulge','e2_bulge','e1_disk',
-        'e2_disk','center_x','center_y','z_source')
+    required_parameters = (
+        "magnitude",
+        "f_bulge",
+        "output_ab_zeropoint",
+        "n_bulge",
+        "n_disk",
+        "r_disk_bulge",
+        "e1_bulge",
+        "e2_bulge",
+        "e1_disk",
+        "e2_disk",
+        "center_x",
+        "center_y",
+        "z_source",
+    )
 
     def get_bulge_disk_mag(self):
         """Returns the apparent magnitude for the bulge and the disk
@@ -199,14 +230,14 @@ class DoubleSersicData(SingleSersicSource):
         """
         # Convert the magnitude to apparent magnitude=
         mag_apparent = absolute_to_apparent(
-            self.source_parameters['magnitude'],
-            self.source_parameters['z_source'],self.cosmo)
+            self.source_parameters["magnitude"],
+            self.source_parameters["z_source"],
+            self.cosmo,
+        )
 
         # Divide the magnitude into the two components
-        mag_bulge = mag_apparent - 2.5 * np.log10(
-            self.source_parameters['f_bulge'])
-        mag_disk = mag_apparent - 2.5 * np.log10(
-            1-self.source_parameters['f_bulge'])
+        mag_bulge = mag_apparent - 2.5 * np.log10(self.source_parameters["f_bulge"])
+        mag_disk = mag_apparent - 2.5 * np.log10(1 - self.source_parameters["f_bulge"])
 
         return mag_bulge, mag_disk
 
@@ -231,19 +262,20 @@ class DoubleSersicData(SingleSersicSource):
         sigma_1, sigma_2 = 0.45, 0.27
 
         # Extract the absolute magnitude
-        M = self.source_parameters['magnitude']
+        M = self.source_parameters["magnitude"]
 
         # Start with the mean relation
-        log_R_half = -0.4*a*M+b
+        log_R_half = -0.4 * a * M + b
         ln_R_half = np.log(10**log_R_half)
 
         # Add scatter
         ln_R_half += np.random.randn() * (
-            sigma_2 + (sigma_1-sigma_2)/(1+10**(-0.8*(M-M_0))))
+            sigma_2 + (sigma_1 - sigma_2) / (1 + 10 ** (-0.8 * (M - M_0)))
+        )
 
         return np.exp(ln_R_half)
 
-    def get_bulge_disk_half_light(self,R_total):
+    def get_bulge_disk_half_light(self, R_total):
         """Returns the half-light radius for the disk and the bulge.
 
         Args:
@@ -261,10 +293,10 @@ class DoubleSersicData(SingleSersicSource):
         """
         # Extract the the flux ratios, the ratio of the half-light radii for
         # both systems, and the sersic index for both systems.
-        f_bulge = self.source_parameters['f_bulge']
-        r_disk_bulge = self.source_parameters['r_disk_bulge']
-        n_bulge = self.source_parameters['n_bulge']
-        n_disk = self.source_parameters['n_disk']
+        f_bulge = self.source_parameters["f_bulge"]
+        r_disk_bulge = self.source_parameters["r_disk_bulge"]
+        n_bulge = self.source_parameters["n_bulge"]
+        n_disk = self.source_parameters["n_disk"]
 
         # Build the function that returns the fraction of the total flux
         # contained within the half-light radius R_sersic for a disk
@@ -277,27 +309,28 @@ class DoubleSersicData(SingleSersicSource):
                 return R_disk - 0.5
 
             # Get the fluxes at R_total
-            flux_disk = self.get_total_sersic_flux_r(R_total,R_disk,
-                n_disk,1-f_bulge)
-            flux_bulge = self.get_total_sersic_flux_r(R_total,
-                R_disk/r_disk_bulge,n_bulge,f_bulge)
+            flux_disk = self.get_total_sersic_flux_r(
+                R_total, R_disk, n_disk, 1 - f_bulge
+            )
+            flux_bulge = self.get_total_sersic_flux_r(
+                R_total, R_disk / r_disk_bulge, n_bulge, f_bulge
+            )
 
             # Get the total flux
-            flux_disk_total = self.get_total_sersic_flux(R_disk,n_disk,
-                1-f_bulge)
-            flux_bulge_total = self.get_total_sersic_flux(R_disk/r_disk_bulge,
-                n_bulge,f_bulge)
+            flux_disk_total = self.get_total_sersic_flux(R_disk, n_disk, 1 - f_bulge)
+            flux_bulge_total = self.get_total_sersic_flux(
+                R_disk / r_disk_bulge, n_bulge, f_bulge
+            )
 
             # Return the ratio minus a half
-            return ((flux_disk+flux_bulge)/(flux_disk_total+flux_bulge_total)
-                - 0.5)
+            return (flux_disk + flux_bulge) / (flux_disk_total + flux_bulge_total) - 0.5
 
         # Solve for the disk radius that would give us the correct half-light
         # radius.
-        R_disk_solve = fsolve(flux_fraction,R_total*r_disk_bulge)[0]
+        R_disk_solve = fsolve(flux_fraction, R_total * r_disk_bulge)[0]
         R_bulge_solve = R_disk_solve / r_disk_bulge
 
-        return R_bulge_solve,R_disk_solve
+        return R_bulge_solve, R_disk_solve
 
     def draw_source(self):
         """Returns lenstronomy LightModel kwargs
@@ -318,58 +351,66 @@ class DoubleSersicData(SingleSersicSource):
         r_half_bulge, r_half_disk = self.get_bulge_disk_half_light(r_total)
 
         # Convert the radii to angular coordinates.
-        kpc_p_a = kpc_per_arcsecond(self.source_parameters['z_source'],
-            self.cosmo)
+        kpc_p_a = kpc_per_arcsecond(self.source_parameters["z_source"], self.cosmo)
         r_half_bulge /= kpc_p_a
         r_half_disk /= kpc_p_a
 
         # Make the kwargs for both sersics.
-        kwargs_bulge = {'R_sersic':r_half_bulge,
-            'n_sersic':self.source_parameters['n_bulge'],
-            'e1':self.source_parameters['e1_bulge'],
-            'e2':self.source_parameters['e2_bulge']}
-        kwargs_disk = {'R_sersic':r_half_disk,
-            'n_sersic':self.source_parameters['n_disk'],
-            'e1':self.source_parameters['e1_disk'],
-            'e2':self.source_parameters['e2_disk']}
+        kwargs_bulge = {
+            "R_sersic": r_half_bulge,
+            "n_sersic": self.source_parameters["n_bulge"],
+            "e1": self.source_parameters["e1_bulge"],
+            "e2": self.source_parameters["e2_bulge"],
+        }
+        kwargs_disk = {
+            "R_sersic": r_half_disk,
+            "n_sersic": self.source_parameters["n_disk"],
+            "e1": self.source_parameters["e1_disk"],
+            "e2": self.source_parameters["e2_disk"],
+        }
 
-        return self._complete_double_sersic_draw(mag_bulge, kwargs_bulge, mag_disk, kwargs_disk)
+        return self._complete_double_sersic_draw(
+            mag_bulge, kwargs_bulge, mag_disk, kwargs_disk
+        )
 
-    def _complete_double_sersic_draw(self, mag_bulge, kwargs_bulge, mag_disk, kwargs_disk):
-        light_model_kwargs = [kwargs_bulge,kwargs_disk]
+    def _complete_double_sersic_draw(
+        self, mag_bulge, kwargs_bulge, mag_disk, kwargs_disk
+    ):
+        light_model_kwargs = [kwargs_bulge, kwargs_disk]
         # Add the shared parameters.
         for kwargs in light_model_kwargs:
-            kwargs['center_x'] = self.source_parameters['center_x']
-            kwargs['center_y'] = self.source_parameters['center_y']
+            kwargs["center_x"] = self.source_parameters["center_x"]
+            kwargs["center_y"] = self.source_parameters["center_y"]
 
         # Get the amplitude for each component
-        amp_bulge = SingleSersicSource.mag_to_amplitude(mag_bulge,
-            self.source_parameters['output_ab_zeropoint'],kwargs_bulge)
-        kwargs_bulge['amp'] = amp_bulge
-        amp_disk = SingleSersicSource.mag_to_amplitude(mag_disk,
-            self.source_parameters['output_ab_zeropoint'],kwargs_disk)
-        kwargs_disk['amp'] = amp_disk
+        amp_bulge = SingleSersicSource.mag_to_amplitude(
+            mag_bulge, self.source_parameters["output_ab_zeropoint"], kwargs_bulge
+        )
+        kwargs_bulge["amp"] = amp_bulge
+        amp_disk = SingleSersicSource.mag_to_amplitude(
+            mag_disk, self.source_parameters["output_ab_zeropoint"], kwargs_disk
+        )
+        kwargs_disk["amp"] = amp_disk
 
-        kwargs_disk['amp'] *= self.source_parameters.get('brightness_multiplier', 1)
-        kwargs_bulge['amp'] *= self.source_parameters.get('brightness_multiplier', 1)
+        kwargs_disk["amp"] *= self.source_parameters.get("brightness_multiplier", 1)
+        kwargs_bulge["amp"] *= self.source_parameters.get("brightness_multiplier", 1)
 
         # Populate our remaining lists.
-        light_model_list = ['SERSIC_ELLIPSE']*2
-        light_z_list = [self.source_parameters['z_source']]*2
+        light_model_list = ["SERSIC_ELLIPSE"] * 2
+        light_z_list = [self.source_parameters["z_source"]] * 2
 
-        return light_model_list,light_model_kwargs,light_z_list
+        return light_model_list, light_model_kwargs, light_z_list
 
 
 class DoubleSersicCOSMODC2(DoubleSersicData):
 
-    required_parameters = (
-        'cosmodc2_file', 'center_x', 'center_y', 'z_source')
+    required_parameters = ("cosmodc2_file", "center_x", "center_y", "z_source")
 
     def __init__(self, cosmology_parameters, source_parameters):
         super().__init__(cosmology_parameters, source_parameters)
 
-        self.catalog = np.load(source_parameters['cosmodc2_file'])['arr_0'][:]
-        self.catalog = np.sort(self.catalog, order='redshift')
+        self.catalog = np.load(source_parameters["cosmodc2_file"])["arr_0"][:]
+        self.catalog = np.sort(self.catalog, order="redshift")
 
     @staticmethod
     def divide_magnitude(mag_total, f_bulge):
@@ -384,13 +425,13 @@ class DoubleSersicCOSMODC2(DoubleSersicData):
                 magnitude of the disk as a tuple.
         """
         # Convert from magnitude to some kind of luminosity (in unspecified units)
-        L_total = 10**(-0.4 * mag_total)
+        L_total = 10 ** (-0.4 * mag_total)
         # Divide between bulge and disk
         L_bulge = L_total * f_bulge
         L_disk = L_total - L_bulge
         # f_bulge could be 0 or 1, avoid runtimewarning
         with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
+            warnings.simplefilter("ignore")
             return -2.5 * np.log10([L_bulge, L_disk])
 
     def draw_source(self):
@@ -406,29 +447,34 @@ class DoubleSersicCOSMODC2(DoubleSersicData):
         # (should randomize sufficiently, assuming redshift is sampled
         #  from a nice continuous distribution)
         index = np.searchsorted(
-            self.catalog['redshift'], 
-            self.source_parameters['z_source'])
+            self.catalog["redshift"], self.source_parameters["z_source"]
+        )
         if index >= len(self.catalog):
             warnings.warn(
-                "Redshift beyond catalog range, returning most distant galaxy")
+                "Redshift beyond catalog range, returning most distant galaxy"
+            )
             index = len(self.catalog) - 1
         d = self.catalog[index]
         # Convert from record to dict. Kludgy.
         d = dict(zip(d.dtype.fields.keys(), d))
 
         mag_bulge, mag_disk = self.divide_magnitude(
-            d['mag_i_lsst'], d['bulge_to_total_ratio_i'])
+            d["mag_i_lsst"], d["bulge_to_total_ratio_i"]
+        )
 
         kwargs_bulge = {
-            'R_sersic': d['size_bulge_true'],
-            'n_sersic': d['sersic_bulge'],
-            'e1': d['ellipticity_1_bulge_true'],
-            'e2': d['ellipticity_2_bulge_true']}
+            "R_sersic": d["size_bulge_true"],
+            "n_sersic": d["sersic_bulge"],
+            "e1": d["ellipticity_1_bulge_true"],
+            "e2": d["ellipticity_2_bulge_true"],
+        }
         kwargs_disk = {
-            'R_sersic': d['size_disk_true'],
-            'n_sersic': d['sersic_disk'],
-            'e1': d['ellipticity_1_disk_true'],
-            'e2': d['ellipticity_2_disk_true']}
+            "R_sersic": d["size_disk_true"],
+            "n_sersic": d["sersic_disk"],
+            "e1": d["ellipticity_1_disk_true"],
+            "e2": d["ellipticity_2_disk_true"],
+        }
 
         return self._complete_double_sersic_draw(
-            mag_bulge, kwargs_bulge, mag_disk, kwargs_disk)
+            mag_bulge, kwargs_bulge, mag_disk, kwargs_disk
+        )

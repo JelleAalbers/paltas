@@ -10,7 +10,7 @@ import numpy as np
 from scipy.stats import truncnorm
 
 
-class MultivariateLogNormal():
+class MultivariateLogNormal:
     """Class for drawing multiple parameters from a multivariate log normal
     distribution.
 
@@ -22,16 +22,16 @@ class MultivariateLogNormal():
         Returned values will follow the distribution exp(normal(mu,covariance))
     """
 
-    def __init__(self,mean,covariance):
+    def __init__(self, mean, covariance):
         # Make sure the dimension of the mean allows for easy matrix
         # operations
-        if len(mean.shape)==1:
-            mean = np.expand_dims(mean,axis=0)
+        if len(mean.shape) == 1:
+            mean = np.expand_dims(mean, axis=0)
         self.mean = mean
         self.covariance = covariance
         self.L = np.linalg.cholesky(self.covariance)
 
-    def __call__(self,n=1):
+    def __call__(self, n=1):
         """Returns n draws from the distribution
 
         Args:
@@ -40,12 +40,13 @@ class MultivariateLogNormal():
         Returns
             (np.array): n x len(mean) array of draws.
         """
-        rand_draw = np.random.randn(self.mean.shape[1]*n).reshape(
-            (self.mean.shape[1],n))
-        return np.exp(self.mean.T+np.dot(self.L,rand_draw)).T
+        rand_draw = np.random.randn(self.mean.shape[1] * n).reshape(
+            (self.mean.shape[1], n)
+        )
+        return np.exp(self.mean.T + np.dot(self.L, rand_draw)).T
 
 
-class TruncatedMultivariateNormal():
+class TruncatedMultivariateNormal:
     """Class for drawing multiple parameters from a truncated multivariate
     normal distribution.
 
@@ -61,21 +62,21 @@ class TruncatedMultivariateNormal():
         using this in high dimensions.
     """
 
-    def __init__(self,mean,covariance,min_values=None,max_values=None):
+    def __init__(self, mean, covariance, min_values=None, max_values=None):
         # Make sure that each of the n-dimensional inputs follows
         # the desired shape for matrix calculations
-        if len(mean.shape)==1:
-            mean = np.expand_dims(mean,axis=0)
+        if len(mean.shape) == 1:
+            mean = np.expand_dims(mean, axis=0)
         # If none for min_values, set to negative infinity
         if min_values is None:
             min_values = np.ones(mean.shape) * -np.inf
-        elif len(min_values.shape)==1:
-            min_values = np.expand_dims(min_values,axis=0)
+        elif len(min_values.shape) == 1:
+            min_values = np.expand_dims(min_values, axis=0)
         # If none for max_values, set to positive infinity
         if max_values is None:
             max_values = np.ones(mean.shape) * np.inf
-        elif len(max_values.shape)==1:
-            max_values = np.expand_dims(max_values,axis=0)
+        elif len(max_values.shape) == 1:
+            max_values = np.expand_dims(max_values, axis=0)
 
         self.mean = mean
         self.covariance = covariance
@@ -83,7 +84,7 @@ class TruncatedMultivariateNormal():
         self.min_values = min_values
         self.max_values = max_values
 
-    def __call__(self,n=1):
+    def __call__(self, n=1):
         """Returns n draws from the distribution
 
         Args:
@@ -95,61 +96,63 @@ class TruncatedMultivariateNormal():
         # Start with a regular draw
         n_accepted = 0
         n_samp = n
-        keep_draws = np.zeros((n,self.mean.shape[1]))
-        rand_draw = np.random.randn(self.mean.shape[1]*n_samp).reshape(
-            (self.mean.shape[1],n_samp))
-        draws = (self.mean.T+np.dot(self.L,rand_draw)).T
+        keep_draws = np.zeros((n, self.mean.shape[1]))
+        rand_draw = np.random.randn(self.mean.shape[1] * n_samp).reshape(
+            (self.mean.shape[1], n_samp)
+        )
+        draws = (self.mean.T + np.dot(self.L, rand_draw)).T
 
         # Check which draws are within our bounds
-        keep_ind = np.prod(draws > self.min_values,axis=-1,dtype=np.bool)
-        keep_ind *= np.prod(draws < self.max_values,axis=-1,dtype=np.bool)
-        keep_draws[n_accepted:n_accepted+np.sum(keep_ind)] = draws[keep_ind]
+        keep_ind = np.prod(draws > self.min_values, axis=-1, dtype=np.bool)
+        keep_ind *= np.prod(draws < self.max_values, axis=-1, dtype=np.bool)
+        keep_draws[n_accepted : n_accepted + np.sum(keep_ind)] = draws[keep_ind]
         n_accepted += np.sum(keep_ind)
 
         # Keep drawing until we have enough samples.
-        while n_accepted<n:
+        while n_accepted < n:
             # Draw
-            rand_draw = np.random.randn(self.mean.shape[1]*n_samp).reshape(
-                (self.mean.shape[1],n_samp))
-            draws = (self.mean.T+np.dot(self.L,rand_draw)).T
+            rand_draw = np.random.randn(self.mean.shape[1] * n_samp).reshape(
+                (self.mean.shape[1], n_samp)
+            )
+            draws = (self.mean.T + np.dot(self.L, rand_draw)).T
             # Check for the values in bounds
-            keep_ind = np.prod(draws > self.min_values,axis=-1,dtype=np.bool)
-            keep_ind *= np.prod(draws < self.max_values,axis=-1,dtype=np.bool)
+            keep_ind = np.prod(draws > self.min_values, axis=-1, dtype=np.bool)
+            keep_ind *= np.prod(draws < self.max_values, axis=-1, dtype=np.bool)
             # Only use the ones we need
-            use_keep = np.minimum(n-n_accepted,np.sum(keep_ind))
-            keep_draws[n_accepted:n_accepted+use_keep] = (
-                draws[keep_ind][:use_keep])
+            use_keep = np.minimum(n - n_accepted, np.sum(keep_ind))
+            keep_draws[n_accepted : n_accepted + use_keep] = draws[keep_ind][:use_keep]
             n_accepted += use_keep
 
         # Remove first dimension for the n=1 case
-        if n==1:
+        if n == 1:
             keep_draws = np.squeeze(keep_draws)
 
         return keep_draws
 
 
-class EllipticitiesTranslation():
-    """Class that takes in distributions for q_lens and phi_lens, returns 
+class EllipticitiesTranslation:
+    """Class that takes in distributions for q_lens and phi_lens, returns
     samples of e1 and e2 correspondingly
-    
-    Args: 
-        q_dist (scipy.stats.rv_continuous.rvs or float): distribution for 
+
+    Args:
+        q_dist (scipy.stats.rv_continuous.rvs or float): distribution for
             axis ratio (can be callable or constant)
-        phi_dist (scipy.stats.rv_continuous.rvs or float): distribution for 
+        phi_dist (scipy.stats.rv_continuous.rvs or float): distribution for
             orientation angle in radians (can be callable or constant)
 
-    Notes: 
+    Notes:
 
     """
-    def __init__(self,q_dist,phi_dist):
+
+    def __init__(self, q_dist, phi_dist):
         self.q_dist = q_dist
         self.phi_dist = phi_dist
 
     def __call__(self):
-        """Returns a sample of e1,e2 
+        """Returns a sample of e1,e2
 
         Returns:
-            (float,float): samples of x-direction ellipticity 
+            (float,float): samples of x-direction ellipticity
                 eccentricity, xy-direction ellipticity eccentricity
         """
 
@@ -161,35 +164,35 @@ class EllipticitiesTranslation():
             phi = self.phi_dist()
         else:
             phi = self.phi_dist
-        
-        e1 = (1 - q)/(1+q) * np.cos(2*phi)
-        e2 = (1 - q)/(1+q) * np.sin(2*phi)
 
-        return e1,e2
+        e1 = (1 - q) / (1 + q) * np.cos(2 * phi)
+        e2 = (1 - q) / (1 + q) * np.sin(2 * phi)
+
+        return e1, e2
 
 
-class ExternalShearTranslation():
-    """Class that maps samples of gamma_ext, phi_ext distributions to 
+class ExternalShearTranslation:
+    """Class that maps samples of gamma_ext, phi_ext distributions to
         gamma1, gamma2
-    
-    Args: 
-        gamma_dist (scipy.stats.rv_continuous.rvs or float): distribution for 
-            external shear modulus (callable or constant) 
-        phi_dist (scipy.stats.rv_continuous.rvs or float): distribution for 
+
+    Args:
+        gamma_dist (scipy.stats.rv_continuous.rvs or float): distribution for
+            external shear modulus (callable or constant)
+        phi_dist (scipy.stats.rv_continuous.rvs or float): distribution for
             orientation angle in radians (callable or constant)
-    
+
     Notes:
     """
 
-    def __init__(self, gamma_dist,phi_dist):
+    def __init__(self, gamma_dist, phi_dist):
         self.gamma_dist = gamma_dist
         self.phi_dist = phi_dist
-    
+
     def __call__(self):
         """Returns gamma1, gamma2 samples
 
         Returns:
-            (float,float): samples of external shear coordinate values 
+            (float,float): samples of external shear coordinate values
         """
         if callable(self.gamma_dist):
             gamma = self.gamma_dist()
@@ -199,41 +202,41 @@ class ExternalShearTranslation():
             phi = self.phi_dist()
         else:
             phi = self.phi_dist
-        
-        gamma1 = gamma * np.cos(2*phi)
-        gamma2 = gamma * np.sin(2*phi)
-        
-        return gamma1,gamma2
+
+        gamma1 = gamma * np.cos(2 * phi)
+        gamma2 = gamma * np.sin(2 * phi)
+
+        return gamma1, gamma2
 
 
-class KappaTransformDistribution():
-    """Class that samples Kext given 1 / (1-Kext) ~ n. n is sampled from a 
+class KappaTransformDistribution:
+    """Class that samples Kext given 1 / (1-Kext) ~ n. n is sampled from a
     distribution given by n_dist, then Kext is computed given the
     transformation
-    
-    Args: 
-        n_dist (scipy.stats.rv_continuous.rvs or float): distribution for 
+
+    Args:
+        n_dist (scipy.stats.rv_continuous.rvs or float): distribution for
             1 / (1-Kext) (can be callable or constant)
     """
 
-    def __init__(self,n_dist):
+    def __init__(self, n_dist):
         self.n_dist = n_dist
 
     def __call__(self):
         """Samples 1/(1-Kext), then maps that sample to Kext value
 
-        Returns: 
+        Returns:
             (float): Kext sample
         """
         if callable(self.n_dist):
             n = self.n_dist()
         else:
             n = self.n_dist
-        
-        return 1 - (1/n)
+
+        return 1 - (1 / n)
 
 
-class Duplicate():
+class Duplicate:
     """Class that returns two copies of the same random draw.
 
     Args:
@@ -241,7 +244,7 @@ class Duplicate():
             draw the sample from.
     """
 
-    def __init__(self,dist):
+    def __init__(self, dist):
         self.dist = dist
 
     def __call__(self):
@@ -256,7 +259,7 @@ class Duplicate():
         else:
             samp = self.dist
 
-        return samp,samp
+        return samp, samp
 
 
 class DuplicateScatter(Duplicate):
@@ -270,7 +273,7 @@ class DuplicateScatter(Duplicate):
             of the variable.
     """
 
-    def __init__(self,dist,scatter):
+    def __init__(self, dist, scatter):
         self.dist = dist
         self.scatter = scatter
 
@@ -282,25 +285,25 @@ class DuplicateScatter(Duplicate):
             (float,float): The two samples.
         """
         # Get the samples from the super function and add the scatter.
-        samp,samp = super().__call__()
-        return samp,samp+np.random.randn()*self.scatter
+        samp, samp = super().__call__()
+        return samp, samp + np.random.randn() * self.scatter
 
 
-class DuplicateXY():
-    """Class that returns two copies of x, y coordinates drawn from 
+class DuplicateXY:
+    """Class that returns two copies of x, y coordinates drawn from
         distributions
 
-    Args: 
-        x_dist (scipy.stats.rv_continuous.rvs or float): distribution for x 
+    Args:
+        x_dist (scipy.stats.rv_continuous.rvs or float): distribution for x
             (can be callable or constant)
-        y_dist (scipy.stats.rv_continuous.rvs or float): distribution for y 
+        y_dist (scipy.stats.rv_continuous.rvs or float): distribution for y
             (can be callable or constant)
     """
 
-    def __init__(self,x_dist,y_dist):
+    def __init__(self, x_dist, y_dist):
         self.x_dist = x_dist
         self.y_dist = y_dist
-    
+
     def __call__(self):
         """Returns two copies of x,y sample
 
@@ -317,15 +320,15 @@ class DuplicateXY():
             y = self.y_dist()
         else:
             y = self.y_dist
-        
-        return x,y,x,y
+
+        return x, y, x, y
 
 
-class RedshiftsTruncNorm():
-    """Class that samples z_lens and z_source from truncated normal 
+class RedshiftsTruncNorm:
+    """Class that samples z_lens and z_source from truncated normal
         distributions, forcing z_source > z_lens to be true
 
-    Args: 
+    Args:
         z_lens_min (float): minimum allowed lens redshift
         z_lens_mean (float): lens redshift mean
         z_lens_std (float): lens redshift standard deviation
@@ -334,34 +337,43 @@ class RedshiftsTruncNorm():
         z_source_std (float): source redshift standard deviation
     """
 
-    def __init__(self, z_lens_min,z_lens_mean,z_lens_std,z_source_min,
-        z_source_mean,z_source_std):
+    def __init__(
+        self,
+        z_lens_min,
+        z_lens_mean,
+        z_lens_std,
+        z_source_min,
+        z_source_mean,
+        z_source_std,
+    ):
         # transform z_lens_min, z_source_min to be in units of std. deviations
-        self.z_lens_min = (z_lens_min - z_lens_mean) / z_lens_std 
+        self.z_lens_min = (z_lens_min - z_lens_mean) / z_lens_std
         self.z_source_min = (z_source_min - z_source_mean) / z_source_std
         # define truncnorm dist for lens redshift
-        self.z_lens_dist = truncnorm(self.z_lens_min,np.inf,loc=z_lens_mean,
-            scale=z_lens_std).rvs
+        self.z_lens_dist = truncnorm(
+            self.z_lens_min, np.inf, loc=z_lens_mean, scale=z_lens_std
+        ).rvs
         # save z_source info
         self.z_source_mean = z_source_mean
         self.z_source_std = z_source_std
-    
+
     def __call__(self):
         """Returns samples of redshifts, ensuring z_source > z_lens
 
-        Returns: 
-            (float,float): z_lens,z_source 
+        Returns:
+            (float,float): z_lens,z_source
         """
         z_lens = self.z_lens_dist()
         clip = (z_lens - self.z_source_mean) / self.z_source_std
         # number of std. devs away to stop (negative)
-        if(clip > self.z_source_min):
+        if clip > self.z_source_min:
             self.z_source_min = clip
         # define truncnorm dist for source redshift
-        z_source = truncnorm(self.z_source_min,np.inf,self.z_source_mean,
-            self.z_source_std).rvs()
+        z_source = truncnorm(
+            self.z_source_min, np.inf, self.z_source_mean, self.z_source_std
+        ).rvs()
 
-        return z_lens,z_source
+        return z_lens, z_source
 
 
 class RedshiftsLensLight(RedshiftsTruncNorm):
@@ -385,11 +397,11 @@ class RedshiftsLensLight(RedshiftsTruncNorm):
         Returns:
             (float,float): z_lens,z_lens_light,z_source
         """
-        z_lens,z_source = super().__call__()
-        return z_lens,z_lens,z_source
+        z_lens, z_source = super().__call__()
+        return z_lens, z_lens, z_source
 
 
-class MultipleValues():
+class MultipleValues:
     """Class to call dist.rvs(size=num)
 
     Args:
@@ -400,11 +412,11 @@ class MultipleValues():
     def __init__(self, dist, num):
         self.dist = dist
         self.num = num
-    
+
     def __call__(self):
         """Returns specified # of samples from dist
-        
-        Returns: 
+
+        Returns:
             list(float): |num| samples from dist
         """
         return self.dist(size=self.num)

@@ -26,8 +26,11 @@ class LOSBase(paltas.BaseComponent):
     """
 
     init_kwargs = (
-        'los_parameters', 'main_deflector_parameters',
-        'source_parameters', 'cosmology_parameters')
+        "los_parameters",
+        "main_deflector_parameters",
+        "source_parameters",
+        "cosmology_parameters",
+    )
 
     def draw_los(self):
         """Draws masses, concentrations,and positions for the los substructure
@@ -41,7 +44,7 @@ class LOSBase(paltas.BaseComponent):
         """
         raise NotImplementedError
 
-    def calculate_average_alpha(self,n_draws=100):
+    def calculate_average_alpha(self, n_draws=100):
         """Calculates the average deflection maps from the los at each
         redshift specified by the los parameters and returns corresponding
         lenstronomy objects.
@@ -53,12 +56,15 @@ class LOSBase(paltas.BaseComponent):
         Returns:
             (tuple): A tuple of three lists: the first is the interpolation
             profile type for each redshift slice and the second is the
-            lenstronomy kwargs for each profile, and the third is a list of 
+            lenstronomy kwargs for each profile, and the third is a list of
             redshift values for each profile.
         """
         raise NotImplementedError
 
     def draw(self, result, *, kwargs_numerics, numpix, **kwargs):
         result.add_lenses(*self.draw_los())
-        result.add_lenses(*self.calculate_average_alpha(
-            numpix * kwargs_numerics['supersampling_factor']))
+        result.add_lenses(
+            *self.calculate_average_alpha(
+                numpix * kwargs_numerics["supersampling_factor"]
+            )
+        )

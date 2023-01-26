@@ -14,11 +14,11 @@ class COSMOSSersic(COSMOSCatalog):
     """Class to Combine COSMOS galaxy with Sersic light source
 
     Args:
-        cosmology_parameters (str,dict, or colossus.cosmology.Cosmology): 
+        cosmology_parameters (str,dict, or colossus.cosmology.Cosmology):
             Either a name of colossus cosmology, a dict with 'cosmology name':
             name of colossus cosmology, an instance of colussus cosmology, or a
             dict with H0 and Om0 ( other parameters will be set to defaults).
-        source_parameters (dict): A dictionary containing all the parameters 
+        source_parameters (dict): A dictionary containing all the parameters
             needed to draw sources.
 
     Notes:
@@ -56,15 +56,30 @@ class COSMOSSersic(COSMOSCatalog):
         magnitude.
     """
 
-    required_parameters = ('minimum_size_in_pixels','faintest_apparent_mag',
-        'max_z','smoothing_sigma','cosmos_folder','random_rotation',
-        'min_flux_radius','output_ab_zeropoint','z_source', 'mag_sersic',
-        'center_x','center_y','R_sersic', 'n_sersic','e1_sersic', 'e2_sersic',
-        'center_x_sersic','center_y_sersic')
-    optional_parameters = ('source_absolute_magnitude')
+    required_parameters = (
+        "minimum_size_in_pixels",
+        "faintest_apparent_mag",
+        "max_z",
+        "smoothing_sigma",
+        "cosmos_folder",
+        "random_rotation",
+        "min_flux_radius",
+        "output_ab_zeropoint",
+        "z_source",
+        "mag_sersic",
+        "center_x",
+        "center_y",
+        "R_sersic",
+        "n_sersic",
+        "e1_sersic",
+        "e2_sersic",
+        "center_x_sersic",
+        "center_y_sersic",
+    )
+    optional_parameters = "source_absolute_magnitude"
 
     def draw_source(self, catalog_i=None, phi=None):
-        """Creates lenstronomy kwargs for a COSMOS catalog image and a 
+        """Creates lenstronomy kwargs for a COSMOS catalog image and a
         Sersic source
 
         Args:
@@ -82,32 +97,36 @@ class COSMOSSersic(COSMOSCatalog):
             If catalog_i is not provided, one that meets the cuts will be
             selected at random.
         """
-        model_list, kwargs_list, _ = (
-            COSMOSCatalog.draw_source(self, catalog_i, phi))
+        model_list, kwargs_list, _ = COSMOSCatalog.draw_source(self, catalog_i, phi)
         # look up difference between append & extend
-        model_list.append('SERSIC_ELLIPSE')
+        model_list.append("SERSIC_ELLIPSE")
 
         # create dict for sersic
         sersic_kwargs_dict = {}
-        suffix = '_sersic'
+        suffix = "_sersic"
         for param_name in self.__class__.required_parameters:
             if suffix in param_name:
                 # R_sersic & n_sersic keep suffix
-                if (param_name == 'R_sersic' or param_name == 'n_sersic'):
-                    sersic_kwargs_dict[param_name] = (
-                        self.source_parameters[param_name])
+                if param_name == "R_sersic" or param_name == "n_sersic":
+                    sersic_kwargs_dict[param_name] = self.source_parameters[param_name]
                 else:
-                    sersic_kwargs_dict[param_name[:-7]] = (
-                        self.source_parameters[param_name])
+                    sersic_kwargs_dict[param_name[:-7]] = self.source_parameters[
+                        param_name
+                    ]
 
         # mag to amp conversion
-        sersic_kwargs_dict.pop('mag')
-        mag_apparent = absolute_to_apparent(self.source_parameters['mag_sersic'],
-            self.source_parameters['z_source'],self.cosmo)
-        sersic_kwargs_dict['amp'] = SingleSersicSource.mag_to_amplitude(
-            mag_apparent,self.source_parameters['output_ab_zeropoint'],
-            sersic_kwargs_dict)
+        sersic_kwargs_dict.pop("mag")
+        mag_apparent = absolute_to_apparent(
+            self.source_parameters["mag_sersic"],
+            self.source_parameters["z_source"],
+            self.cosmo,
+        )
+        sersic_kwargs_dict["amp"] = SingleSersicSource.mag_to_amplitude(
+            mag_apparent,
+            self.source_parameters["output_ab_zeropoint"],
+            sersic_kwargs_dict,
+        )
 
         kwargs_list.append(sersic_kwargs_dict)
 
-        return model_list, kwargs_list, [self.source_parameters['z_source']]*2
+        return model_list, kwargs_list, [self.source_parameters["z_source"]] * 2

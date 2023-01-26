@@ -1,6 +1,5 @@
-
 class BaseComponent:
-    """Base class for all paltas models (e.g. SourceBase) """
+    """Base class for all paltas models (e.g. SourceBase)"""
 
     init_kwargs = tuple()
     required_parameters = tuple()
@@ -34,27 +33,29 @@ class BaseComponent:
         kwargs.update(dict(zip(self.init_kwargs, args)))
 
         import paltas
+
         for dict_name in self.init_kwargs:
             if kwargs.get(dict_name) is None:
                 if _first_time:
                     raise ValueError(f"Must provide {dict_name} to init {self}")
                 continue
-            if dict_name == 'cosmology_parameters':
+            if dict_name == "cosmology_parameters":
                 self.cosmo = paltas.Utils.cosmology_utils.get_cosmology(
-                    kwargs['cosmology_parameters'])
+                    kwargs["cosmology_parameters"]
+                )
             else:
                 getattr(self, dict_name).update(kwargs[dict_name])
 
-    def check_parameterization(self,required_params):
-        """ Check that all the required parameters are present
-        """
+    def check_parameterization(self, required_params):
+        """Check that all the required parameters are present"""
         present_params = set(getattr(self, self.main_param_dict_name).keys())
         required_params = set(required_params)
         missing_params = required_params - present_params
         if missing_params:
             raise ValueError(
                 f"Missing parameters {missing_params}"
-                 f" in {self.main_param_dict_name}.")
+                f" in {self.main_param_dict_name}."
+            )
 
     @classmethod
     def init_from_sample(cls, sample):

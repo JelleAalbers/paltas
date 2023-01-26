@@ -13,7 +13,7 @@ class SinglePointSource(PointSourceBase):
     """Class to generate single point source model
 
     Args:
-        point_source_parameters (dict): dictionary with source-specific 
+        point_source_parameters (dict): dictionary with source-specific
             parameters.
 
     Notes:
@@ -37,8 +37,13 @@ class SinglePointSource(PointSourceBase):
         of days.
     """
 
-    required_parameters = ('x_point_source', 'y_point_source', 'magnitude',
-        'output_ab_zeropoint', 'compute_time_delays')
+    required_parameters = (
+        "x_point_source",
+        "y_point_source",
+        "magnitude",
+        "output_ab_zeropoint",
+        "compute_time_delays",
+    )
 
     def draw_point_source(self):
         """Return lenstronomy PointSource kwargs
@@ -49,18 +54,20 @@ class SinglePointSource(PointSourceBase):
         """
 
         point_source_kwargs = {}
-        point_source_kwargs['ra_source'] = self.point_source_parameters[
-            'x_point_source']
-        point_source_kwargs['dec_source'] = self.point_source_parameters[
-            'y_point_source']
-        if('mag_pert' in self.point_source_parameters.keys()):
-            point_source_kwargs['mag_pert'] = self.point_source_parameters[
-                'mag_pert']
+        point_source_kwargs["ra_source"] = self.point_source_parameters[
+            "x_point_source"
+        ]
+        point_source_kwargs["dec_source"] = self.point_source_parameters[
+            "y_point_source"
+        ]
+        if "mag_pert" in self.point_source_parameters.keys():
+            point_source_kwargs["mag_pert"] = self.point_source_parameters["mag_pert"]
 
         # mag to amp conversion
         # note: flux = amplitude for point source
-        point_source_kwargs['point_amp'] = magnitude2cps(
-            self.point_source_parameters['magnitude'],
-            self.point_source_parameters['output_ab_zeropoint'])
+        point_source_kwargs["point_amp"] = magnitude2cps(
+            self.point_source_parameters["magnitude"],
+            self.point_source_parameters["output_ab_zeropoint"],
+        )
 
-        return ['SOURCE_POSITION'], [point_source_kwargs]
+        return ["SOURCE_POSITION"], [point_source_kwargs]

@@ -10,7 +10,7 @@ import paltas
 
 
 class SubhalosBase(paltas.BaseComponent):
-    """ Base class for rendering the subhalos of a main halo.
+    """Base class for rendering the subhalos of a main halo.
 
     Args:
         subhalo_parameters (dict): A dictionary containing the type of
@@ -26,8 +26,11 @@ class SubhalosBase(paltas.BaseComponent):
     """
 
     init_kwargs = (
-        'subhalo_parameters', 'main_deflector_parameters', 
-        'source_parameters', 'cosmology_parameters')
+        "subhalo_parameters",
+        "main_deflector_parameters",
+        "source_parameters",
+        "cosmology_parameters",
+    )
 
     def draw_subhalos(self):
         """Draws masses, concentrations,and positions for the subhalos of a

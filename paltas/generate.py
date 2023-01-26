@@ -25,10 +25,12 @@ from paltas.Utils.cli_maker import make_cli
 
 
 def generate_from_config(
-        config_path, save_folder, 
-        n: int = 1, 
-        save_png_too: bool = False, 
-        tf_record: bool = False):
+    config_path,
+    save_folder,
+    n: int = 1,
+    save_png_too: bool = False,
+    tf_record: bool = False,
+):
     """Generate simulated strong lensing images
 
     Args:
@@ -44,13 +46,11 @@ def generate_from_config(
     print("Save folder path: {:s}".format(save_folder))
 
     # Copy out config dict
-    shutil.copy(
-        os.path.abspath(config_path),
-        save_folder)
+    shutil.copy(os.path.abspath(config_path), save_folder)
 
     # Gather metadata in a list, will be written to dataframe later
     metadata_list = []
-    metadata_path = os.path.join(save_folder,'metadata.csv')
+    metadata_path = os.path.join(save_folder, "metadata.csv")
 
     # Initialize our config handler
     config_handler = ConfigHandler(config_path)
@@ -71,14 +71,14 @@ def generate_from_config(
             continue
 
         # Save the image and the metadata
-        filename = os.path.join(save_folder, 'image_%07d' % successes)
+        filename = os.path.join(save_folder, "image_%07d" % successes)
         np.save(filename, image)
         if save_png_too:
             plt.imsave(
-                filename + '.png', 
+                filename + ".png",
                 np.log10(image.clip(0, None)),
                 cmap=plt.cm.magma,
-                )
+            )
 
         metadata_list.append(metadata)
 
@@ -91,8 +91,9 @@ def generate_from_config(
             df.to_csv(
                 metadata_path,
                 index=None,
-                mode='w' if first_write else 'a',
-                header=first_write)
+                mode="w" if first_write else "a",
+                header=first_write,
+            )
             metadata_list = []
 
         successes += 1
@@ -101,7 +102,7 @@ def generate_from_config(
     # Make sure the list has been cleared out.
     assert not metadata_list
     pbar.close()
-    print('Dataset generation complete. Acceptance rate: %.3f'%(n/tries))
+    print("Dataset generation complete. Acceptance rate: %.3f" % (n / tries))
 
     # Generate tf record if requested. Save all the parameters and use default
     # filename data.tfrecord
@@ -109,5 +110,5 @@ def generate_from_config(
         print("paltas.Analysis has been removed, get your tfrecords elsewhere")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     make_cli(generate_from_config)

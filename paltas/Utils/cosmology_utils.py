@@ -27,20 +27,23 @@ def get_cosmology(cosmology_parameters):
     if isinstance(cosmology_parameters, str):
         return cosmology.setCosmology(cosmology_parameters)
     if isinstance(cosmology_parameters, dict):
-        if 'cosmology_name' in cosmology_parameters:
-            return get_cosmology(cosmology_parameters['cosmology_name'])
+        if "cosmology_name" in cosmology_parameters:
+            return get_cosmology(cosmology_parameters["cosmology_name"])
         else:
             # Leave some parameters to their default values so the user only
             # has to specify H0 and Om0.
-            col_params = dict(flat=True, H0=cosmology_parameters['H0'],
-                Om0=cosmology_parameters['Om0'],
-                Ob0=cosmology_parameters['Ob0'],
-                sigma8=cosmology_parameters['sigma8'],
-                ns=cosmology_parameters['ns'])
-            return cosmology.setCosmology('temp_cosmo', col_params)
+            col_params = dict(
+                flat=True,
+                H0=cosmology_parameters["H0"],
+                Om0=cosmology_parameters["Om0"],
+                Ob0=cosmology_parameters["Ob0"],
+                sigma8=cosmology_parameters["sigma8"],
+                ns=cosmology_parameters["ns"],
+            )
+            return cosmology.setCosmology("temp_cosmo", col_params)
 
 
-def kpc_per_arcsecond(z,cosmo):
+def kpc_per_arcsecond(z, cosmo):
     """Calculates the physical kpc per arcsecond at a given redshift and
     cosmology
 
@@ -53,36 +56,33 @@ def kpc_per_arcsecond(z,cosmo):
         (float): The kpc per arcsecond
     """
     h = cosmo.h
-    kpc_per_arcsecond = (cosmo.angularDiameterDistance(z) *np.pi/180/3600 /
-        h * 1e3)
+    kpc_per_arcsecond = cosmo.angularDiameterDistance(z) * np.pi / 180 / 3600 / h * 1e3
     return kpc_per_arcsecond
 
 
-def ddt(sample,cosmo):
+def ddt(sample, cosmo):
     """Calculates time delay distance given lens redshift, source redshift, and
     cosmology.
 
-    Args: 
+    Args:
         sample (dict): Dictionary containing dictionaries of parameters for each
             model component. Generated using Sampler .sample() method
         cosmo (colossus.cosmology.Cosmology): An instance of the colossus
             cosmology object
-    
+
     Returns:
         (float): Time delay distance
     """
-    z_lens = sample['main_deflector_parameters']['z_lens']
-    z_source = sample['source_parameters']['z_source']
+    z_lens = sample["main_deflector_parameters"]["z_lens"]
+    z_source = sample["source_parameters"]["z_source"]
     D_d = cosmo.angularDiameterDistance(z_lens)
     D_s = cosmo.angularDiameterDistance(z_source)
-    D_ds =  (1/ (1+z_source)) * cosmo.comovingDistance(z_min=z_lens,
-        z_max=z_source)
-    # convert from Mpc/h to Mpc 
-    return (1+z_lens) * D_d * D_s / (D_ds*cosmo.h)
+    D_ds = (1 / (1 + z_source)) * cosmo.comovingDistance(z_min=z_lens, z_max=z_source)
+    # convert from Mpc/h to Mpc
+    return (1 + z_lens) * D_d * D_s / (D_ds * cosmo.h)
 
 
-def absolute_to_apparent(mag_absolute,z_light,cosmo,
-    include_k_correction=True):
+def absolute_to_apparent(mag_absolute, z_light, cosmo, include_k_correction=True):
     """Converts from absolute magnitude to apparent magnitude.
 
     Args:
@@ -99,9 +99,9 @@ def absolute_to_apparent(mag_absolute,z_light,cosmo,
     # Use the luminosity distance for the conversion
     lum_dist = cosmo.luminosityDistance(z_light)
     # Convert from Mpc/h to pc
-    lum_dist *= 1e6/cosmo.h
+    lum_dist *= 1e6 / cosmo.h
 
-    mag_apparent = mag_absolute + 5 *np.log10(lum_dist/10)
+    mag_apparent = mag_absolute + 5 * np.log10(lum_dist / 10)
 
     # Calculate the k_correction if requested
     if include_k_correction:
@@ -126,4 +126,4 @@ def get_k_correction(z_light):
         for the absolute and apparent magntidue is the same.
     """
 
-    return 2.5 * np.log(1+z_light)
+    return 2.5 * np.log(1 + z_light)
