@@ -5,7 +5,7 @@ Utility functions for simplifying interactions with lenstronomy classes.
 from lenstronomy.ImSim.Numerics.numerics_subframe import NumericsSubFrame
 
 
-class PSFHelper():
+class PSFHelper:
     """Class for simplifying interactions with the lenstronomy PSF class
     when using 2d images generated outside lenstronomy.
 
@@ -20,15 +20,16 @@ class PSFHelper():
             pass to lenstronomy
     """
 
-    def __init__(self,data_class,psf_model,kwargs_numerics):
+    def __init__(self, data_class, psf_model, kwargs_numerics):
         # Just initialize the NumericsSubframe object that we will later call
         # to perform the convolutions
         psf_model.set_pixel_size(data_class.pixel_width)
-        self.image_numerics = NumericsSubFrame(pixel_grid=data_class,
-            psf=psf_model,**kwargs_numerics)
+        self.image_numerics = NumericsSubFrame(
+            pixel_grid=data_class, psf=psf_model, **kwargs_numerics
+        )
         self.data_class = data_class
 
-    def psf_model(self,image):
+    def psf_model(self, image):
         """Apply the psf model to the given image.
 
         Args:
