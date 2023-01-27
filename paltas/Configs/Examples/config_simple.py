@@ -1,4 +1,4 @@
-# Includes a PEMD deflector with external shear, and Sersic sources. Includes 
+# Includes a PEMD deflector with external shear, and Sersic sources. Includes
 # a simple observational effect model that roughly matches HST effects for
 # Wide Field Camera 3 (WFC3) IR channel with the F160W filter.
 

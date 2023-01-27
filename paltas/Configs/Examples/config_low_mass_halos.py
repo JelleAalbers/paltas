@@ -1,6 +1,6 @@
-# Includes line-of-sight halos, subhalos, a PEMD deflector with external shear, 
-# and COSMOS sources. Includes a simple observational effect model that roughly 
-# matches HST effects Wide Field Camera 3 (WFC3) UVIS channel with the F814W 
+# Includes line-of-sight halos, subhalos, a PEMD deflector with external shear,
+# and COSMOS sources. Includes a simple observational effect model that roughly
+# matches HST effects Wide Field Camera 3 (WFC3) UVIS channel with the F814W
 # filter.
 
 import numpy as np

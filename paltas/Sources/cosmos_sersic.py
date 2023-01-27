@@ -2,7 +2,7 @@
 """
 Generate Lenstronomy inputs for a COSMOS galaxy + a Sersic Ellipse
 
-This module contains a class that combines a COSMOS galaxy and a Sersic light 
+This module contains a class that combines a COSMOS galaxy and a Sersic light
 distribution as the two sources for paltas.
 """
 from .cosmos import COSMOSCatalog

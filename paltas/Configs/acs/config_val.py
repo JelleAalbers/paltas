@@ -9,4 +9,3 @@ config_dict['source']['parameters']['source_inclusion_list'] = pd.read_csv(
     names=['catalog_i'])['catalog_i'].to_numpy()
 config_dict['source']['class'] = COSMOSIncludeCatalog
 del config_dict['source']['parameters']['source_exclusion_list']
-

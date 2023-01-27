@@ -2,7 +2,7 @@
 """
 Provides the base class for specifying the point source of a lensing system.
 
-This module contains the base class that all the point source classes will 
+This module contains the base class that all the point source classes will
 build from. Because the steps for rendering a source can vary between different
 models, the required functions are very sparse.
 """
